@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Resurface</string>
+    <string name="accessibility_service_description">Conta vídeos assistidos e detecta deslizes revertidos no Instagram e TikTok, para o seu histórico. Não lê o conteúdo da tela. Opcional — o app funciona sem isto.</string>
 </resources>

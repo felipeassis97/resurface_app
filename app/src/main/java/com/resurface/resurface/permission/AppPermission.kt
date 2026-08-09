@@ -1,17 +1,18 @@
 package com.resurface.resurface.permission
 
 /**
- * Permissões obrigatórias do F1. [Type.SPECIAL] é concedida por tela do sistema (Settings);
- * [Type.RUNTIME] pelo diálogo de runtime. Acessibilidade (opcional, D15) fica pro módulo de F5.
+ * Permissões do app. [Type.SPECIAL] é concedida por tela do sistema; [Type.RUNTIME] pelo diálogo.
+ * ACCESSIBILITY é OPCIONAL (D15) — liga o dado de comportamento (F5), mas NÃO entra em [required].
  */
 enum class AppPermission(val type: Type) {
     USAGE_ACCESS(Type.SPECIAL),
-    NOTIFICATIONS(Type.RUNTIME);
+    NOTIFICATIONS(Type.RUNTIME),
+    ACCESSIBILITY(Type.SPECIAL);
 
     enum class Type { SPECIAL, RUNTIME }
 
     companion object {
-        /** Todas as permissões necessárias pra sair do onboarding no F1. */
-        val required: List<AppPermission> = entries.toList()
+        /** Obrigatórias pra sair do onboarding. Acessibilidade fica de fora (opcional). */
+        val required: List<AppPermission> = listOf(USAGE_ACCESS, NOTIFICATIONS)
     }
 }

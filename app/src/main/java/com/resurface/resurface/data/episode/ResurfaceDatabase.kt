@@ -4,11 +4,16 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.resurface.resurface.data.behavior.BehaviorEventDao
+import com.resurface.resurface.data.behavior.BehaviorEventEntity
 import com.resurface.resurface.data.outcome.AlertOutcomeDao
 import com.resurface.resurface.data.outcome.AlertOutcomeEntity
 
-/** Banco Room do app. v2 adiciona outcomes; v3 torna o episódio único por `startedAt`. */
-@Database(entities = [EpisodeEntity::class, AlertOutcomeEntity::class], version = 3)
+/** Banco Room do app. v2=outcomes; v3=episódio único; v4=comportamento (acessibilidade). */
+@Database(
+    entities = [EpisodeEntity::class, AlertOutcomeEntity::class, BehaviorEventEntity::class],
+    version = 4,
+)
 abstract class ResurfaceDatabase : RoomDatabase() {
 
     /** DAO dos episódios. */
@@ -16,6 +21,9 @@ abstract class ResurfaceDatabase : RoomDatabase() {
 
     /** DAO dos outcomes de aviso. */
     abstract fun alertOutcomeDao(): AlertOutcomeDao
+
+    /** DAO dos eventos de comportamento. */
+    abstract fun behaviorEventDao(): BehaviorEventDao
 
     companion object {
         /** v1→v2: cria a tabela alert_outcome sem tocar em episode (sem perda). */
@@ -43,6 +51,20 @@ abstract class ResurfaceDatabase : RoomDatabase() {
                 db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS `index_episode_startedAt` " +
                         "ON `episode` (`startedAt`)"
+                )
+            }
+        }
+
+        /** v3→v4: cria a tabela behavior_event (acessibilidade, additiva). */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `behavior_event` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`timestamp` INTEGER NOT NULL, " +
+                        "`pkg` TEXT NOT NULL, " +
+                        "`surface` TEXT NOT NULL, " +
+                        "`hesitated` INTEGER NOT NULL)"
                 )
             }
         }
