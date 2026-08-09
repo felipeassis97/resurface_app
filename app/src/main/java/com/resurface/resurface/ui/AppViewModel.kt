@@ -3,6 +3,7 @@ package com.resurface.resurface.ui
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.resurface.resurface.BuildConfig
 import com.resurface.resurface.data.onboarding.OnboardingRepository
 import com.resurface.resurface.permission.AppPermission
 import com.resurface.resurface.permission.PermissionChecker
@@ -31,7 +32,13 @@ class AppViewModel @Inject constructor(
     val permissionStatuses: StateFlow<Map<AppPermission, Boolean>> = _permissionStatuses.asStateFlow()
 
     init {
-        refresh()
+        // DEBUG: zera o onboarding a cada launch pra vê-lo sempre — REMOVER depois dos testes.
+        // Reset acontece UMA vez aqui (não no refresh), então "Concluir" leva pra home normalmente.
+        viewModelScope.launch {
+            if (BuildConfig.DEBUG) onboarding.resetForTesting()
+            _permissionStatuses.value = permissions.statuses()
+            _startRoute.value = computeStartRoute(onboarding.state.first(), permissions.allRequiredGranted())
+        }
     }
 
     /** Reavalia o status ao vivo e recomputa a rota (chamar em todo resume e ao concluir/consentir). */

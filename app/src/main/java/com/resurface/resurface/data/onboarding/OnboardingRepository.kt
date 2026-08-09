@@ -46,4 +46,12 @@ class OnboardingRepository @Inject constructor(
     suspend fun setCompleted(completed: Boolean) = withContext(io) {
         dataStore.edit { it[Keys.COMPLETED] = completed }
     }
+
+    /** DEBUG: zera consentimento + conclusão pra ver o onboarding do zero a cada launch. */
+    suspend fun resetForTesting() = withContext(io) {
+        dataStore.edit {
+            it[Keys.CONSENT] = false
+            it[Keys.COMPLETED] = false
+        }
+    }
 }
