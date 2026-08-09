@@ -1,6 +1,8 @@
 package com.resurface.resurface.ui
 
 import android.content.Intent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -13,11 +15,14 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.resurface.resurface.service.MonitorService
 import com.resurface.resurface.ui.onboarding.OnboardingFlow
+import com.resurface.resurface.ui.onboarding.PermissionRecoveryScreen
+import com.resurface.resurface.ui.theme.ResurfaceMotion
+import com.resurface.resurface.ui.theme.rememberReducedMotion
 
 /**
- * Gate de launch: resolve consentimento + permissões ao vivo e roteia pra onboarding ou app.
- * Reavalia a cada resume (permissão trocada nas configs não tem callback). Sobe o FGS ao entrar
- * no app (D-5).
+ * Gate de launch: resolve conclusão + permissões ao vivo e roteia pra onboarding, recuperação ou
+ * app. Reavalia a cada resume (permissão trocada nas configs não tem callback). Sobe o FGS ao
+ * entrar no app. A troca onboarding→app é um crossfade (continuidade "surfacing", P6).
  */
 @Composable
 fun ResurfaceApp() {
@@ -25,20 +30,28 @@ fun ResurfaceApp() {
     val route by appViewModel.startRoute.collectAsStateWithLifecycle()
     val statuses by appViewModel.permissionStatuses.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val reduced = rememberReducedMotion()
 
     LifecycleResumeEffect(Unit) {
         appViewModel.refresh()
         onPauseOrDispose { }
     }
 
-    when (val r = route) {
-        StartRoute.Loading -> Box(modifier = Modifier.fillMaxSize())
-        is StartRoute.Onboarding -> OnboardingFlow(appViewModel, r.step, statuses)
-        StartRoute.Main -> {
-            LaunchedEffect(Unit) {
-                context.startForegroundService(Intent(context, MonitorService::class.java))
+    Crossfade(
+        targetState = route,
+        animationSpec = tween(if (reduced) 0 else ResurfaceMotion.NudgeEnterMillis, easing = ResurfaceMotion.Emphasized),
+        label = "route",
+    ) { r ->
+        when (r) {
+            StartRoute.Loading -> Box(modifier = Modifier.fillMaxSize())
+            is StartRoute.Onboarding -> OnboardingFlow(appViewModel, r.step, statuses)
+            StartRoute.PermissionRecovery -> PermissionRecoveryScreen(appViewModel)
+            StartRoute.Main -> {
+                LaunchedEffect(Unit) {
+                    context.startForegroundService(Intent(context, MonitorService::class.java))
+                }
+                MainShell()
             }
-            MainShell()
         }
     }
 }

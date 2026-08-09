@@ -14,7 +14,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Gate de launch: resolve consentimento + permissões ao vivo e roteia (D-1). */
+/**
+ * Gate de launch: resolve a conclusão do onboarding + o status ao vivo das permissões e roteia
+ * (D-1). Reavaliar a cada resume — conceder/revogar uma especial acontece fora do app, sem callback.
+ */
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val onboarding: OnboardingRepository,
@@ -31,7 +34,7 @@ class AppViewModel @Inject constructor(
         refresh()
     }
 
-    /** Reavalia o status ao vivo e recomputa a rota (chamar em todo resume). */
+    /** Reavalia o status ao vivo e recomputa a rota (chamar em todo resume e ao concluir/consentir). */
     fun refresh() {
         _permissionStatuses.value = permissions.statuses()
         viewModelScope.launch {
@@ -39,18 +42,6 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    /** Registra o consentimento e reavalia. */
-    fun recordConsent() = viewModelScope.launch {
-        onboarding.recordConsent()
-        refresh()
-    }
-
-    /** Conclui o onboarding se as obrigatórias estão concedidas; reavalia. */
-    fun completeOnboarding() = viewModelScope.launch {
-        if (permissions.allRequiredGranted()) onboarding.setCompleted(true)
-        refresh()
-    }
-
-    /** Intent pra tela de concessão de uma permissão especial; null pra runtime. */
+    /** Intent pra tela de concessão de uma permissão especial; null pra runtime (usa o diálogo). */
     fun settingsIntentFor(permission: AppPermission): Intent? = permissions.settingsIntent(permission)
 }
