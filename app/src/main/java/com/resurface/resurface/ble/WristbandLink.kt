@@ -22,6 +22,12 @@ interface WristbandLink {
     /** Conecta a um device escolhido. */
     fun connect(address: String)
 
+    /** Fecha o link atual (não mexe no device lembrado). */
+    fun disconnect()
+
+    /** Desconecta e esquece o device lembrado (não reconecta passivamente depois). */
+    fun forget()
+
     /** Reconecta ao device lembrado, passivo; no-op se nada lembrado. */
     fun reconnectRemembered()
 }

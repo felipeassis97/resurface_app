@@ -63,17 +63,12 @@ class SettingsViewModelTest {
         override fun startScan() {}
         override fun stopScan() {}
         override fun connect(address: String) {}
+        override fun disconnect() {}
+        override fun forget() {}
         override fun reconnectRemembered() {}
     }
 
-    private fun wristbandPrefs(scope: TestScope): com.resurface.resurface.data.wristband.WristbandPreferences {
-        val ds: DataStore<Preferences> = PreferenceDataStoreFactory.create(scope = scope.backgroundScope) {
-            tmp.newFile("wb-${System.nanoTime()}.preferences_pb")
-        }
-        return com.resurface.resurface.data.wristband.WristbandPreferences(ds, UnconfinedTestDispatcher(scope.testScheduler))
-    }
-
-    private fun vm(scope: TestScope) = SettingsViewModel(config(scope), profile(scope), FakeLink(), wristbandPrefs(scope))
+    private fun vm(scope: TestScope) = SettingsViewModel(config(scope), profile(scope), FakeLink())
 
     /** O UiState expõe o limite padrão (20) sem nada gravado. */
     @Test

@@ -6,7 +6,6 @@ import com.resurface.resurface.ble.WristbandConnectionState
 import com.resurface.resurface.ble.WristbandLink
 import com.resurface.resurface.data.config.ConfigRepository
 import com.resurface.resurface.data.profile.ProfileRepository
-import com.resurface.resurface.data.wristband.WristbandPreferences
 import com.resurface.resurface.domain.model.Schedule
 import com.resurface.resurface.domain.model.Tone
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +18,7 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import javax.inject.Inject
 
-/** Estado dos ajustes: limite, pausa, tom, hobbies, janela ativa e intensidade da pulseira. */
+/** Estado dos ajustes (hub + sub-telas de Profile/Reminders/Schedule). */
 data class SettingsUiState(
     val limitMinutes: Int = ConfigRepository.DEFAULT_LIMIT,
     val pausedToday: Boolean = false,
@@ -27,24 +26,22 @@ data class SettingsUiState(
     val tone: Tone = Tone.GENTIL,
     val hobbies: Set<String> = emptySet(),
     val schedule: Schedule = Schedule(),
-    val intensity: Int? = null,
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val config: ConfigRepository,
     private val profile: ProfileRepository,
-    private val wristband: WristbandLink,
-    private val wristbandPrefs: WristbandPreferences,
+    wristband: WristbandLink,
 ) : ViewModel() {
 
-    /** Espelha config + perfil + intensidade da pulseira. Repositório é a fonte da verdade. */
+    /** Espelha config + perfil. Repositório é a fonte da verdade. */
     val uiState: StateFlow<SettingsUiState> =
-        combine(config.limitMinutes, config.pausedToday, config.schedule, profile.profile, wristbandPrefs.intensity) { limit, paused, sched, prof, intensity ->
-            SettingsUiState(limit, paused, prof.name, prof.tone, prof.hobbies, sched, intensity)
+        combine(config.limitMinutes, config.pausedToday, config.schedule, profile.profile) { limit, paused, sched, prof ->
+            SettingsUiState(limit, paused, prof.name, prof.tone, prof.hobbies, sched)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
-    /** Estado do link BLE da pulseira, observado pela UI. */
+    /** Estado do link BLE da pulseira, só pro subtítulo do hub (pareamento vive no WristbandViewModel). */
     val wristbandState: StateFlow<WristbandConnectionState> = wristband.state
 
     /** Grava o novo limite (o repositório rejeita fora de 10–60). */
@@ -90,21 +87,5 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             config.setSchedule(config.schedule.first().copy(startMinute = startMinute, endMinute = endMinute))
         }
-    }
-
-    /** Pareamento mínimo: faz scan e conecta ao primeiro device válido (app pessoal, 1 pulseira). */
-    fun onPairWristband() {
-        viewModelScope.launch {
-            wristband.startScan()
-            // Conecta ao primeiro match que aparecer; para de esperar quando houver um.
-            val first = wristband.scanResults.first { it.isNotEmpty() }.first()
-            wristband.stopScan()
-            wristband.connect(first.address)
-        }
-    }
-
-    /** Ajusta a intensidade do pulso do aviso (null = auto). */
-    fun onSetIntensity(value: Int?) {
-        viewModelScope.launch { wristbandPrefs.setIntensity(value) }
     }
 }

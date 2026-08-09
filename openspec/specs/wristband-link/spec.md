@@ -5,13 +5,13 @@ TBD - created by archiving change wristband-haptics. Update Purpose after archiv
 ## Requirements
 ### Requirement: Pareamento por scan e conectar
 
-O app MUST oferecer, na tela de Ajustes, uma ação simples que faz scan BLE filtrado pelo
-service UUID da pulseira, conecta ao device encontrado e o lembra para reconexões futuras.
+O app MUST oferecer, na tela de pulseira, um scan BLE filtrado pelo service UUID e apresentar os
+devices encontrados; o usuário **escolhe** qual conectar (não é mais auto-conectar no primeiro). Ao
+conectar, o app lembra o address para reconexões futuras.
 
-#### Scenario: Parear pela primeira vez
-- **WHEN** o usuário toca "Procurar e conectar" com Bluetooth e permissões prontos
-- **THEN** o app faz um scan limitado, conecta ao primeiro device válido e grava o address
-- **AND** o estado do link passa a Connected
+#### Scenario: Escolher e conectar da lista
+- **WHEN** o usuário toca num device encontrado com Bluetooth e permissões prontos
+- **THEN** o app conecta a esse device, grava o address e o estado passa a Connected
 
 #### Scenario: Sem permissão ou adapter desligado
 - **WHEN** falta permissão BLE ou o adapter está desligado
@@ -54,4 +54,17 @@ revogar permissão ou desligar o rádio fora do app.
 #### Scenario: Readiness reflete o estado atual do sistema
 - **WHEN** a permissão é revogada ou o Bluetooth é desligado
 - **THEN** a próxima leitura de readiness reporta o bloqueio correspondente
+
+### Requirement: Desconectar e esquecer
+
+O app MUST oferecer desconectar a pulseira e esquecer o device lembrado. Desconectar SHALL fechar o
+link atual; esquecer SHALL remover o device lembrado para não reconectar passivamente.
+
+#### Scenario: Forget desconecta e limpa
+- **WHEN** o usuário toca "Forget" com a pulseira conectada
+- **THEN** o link é fechado e o device lembrado é removido, e a auto-reconexão não o traz de volta
+
+#### Scenario: Disconnect sem device lembrado é seguro
+- **WHEN** não há link nem device lembrado
+- **THEN** desconectar/esquecer é no-op, sem erro
 

@@ -133,7 +133,7 @@ class WristbandRepository(
         connectJob = scope.launch { gattClient.connect(address, autoConnect) }
     }
 
-    fun disconnect() {
+    override fun disconnect() {
         connectJob?.cancel()
         connectJob = null
         gattClient.disconnect()
@@ -144,7 +144,7 @@ class WristbandRepository(
     }
 
     /** Clears the remembered device and tears down any link to it. */
-    fun forget() {
+    override fun forget() {
         scope.launch {
             connectJob?.cancel()
             connectJob = null
