@@ -5,10 +5,15 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.resurface.resurface.dev.DebugScreen
 import com.resurface.resurface.ui.screens.dashboard.DashboardScreen
-import com.resurface.resurface.ui.screens.settings.SettingsScreen
+import com.resurface.resurface.ui.screens.settings.ProfileScreen
+import com.resurface.resurface.ui.screens.settings.RemindersScreen
+import com.resurface.resurface.ui.screens.settings.ScheduleScreen
+import com.resurface.resurface.ui.screens.settings.SettingsHubScreen
+import com.resurface.resurface.ui.screens.settings.WristbandScreen
 
-/** Registra as rotas: dashboard (inicial) e ajustes (alcançada pelo ícone da top bar). */
+/** Rotas: dashboard (inicial), hub de ajustes e suas sub-telas. */
 @Composable
 fun ResurfaceNavHost(
     navController: NavHostController,
@@ -22,6 +27,20 @@ fun ResurfaceNavHost(
         composable<DashboardRoute> {
             DashboardScreen(onOpenSettings = { navController.navigate(SettingsRoute) })
         }
-        composable<SettingsRoute> { SettingsScreen() }
+        composable<SettingsRoute> {
+            SettingsHubScreen(
+                onBack = navController::navigateUp,
+                onProfile = { navController.navigate(ProfileRoute) },
+                onReminders = { navController.navigate(RemindersRoute) },
+                onSchedule = { navController.navigate(ScheduleRoute) },
+                onWristband = { navController.navigate(WristbandRoute) },
+                onDebug = { navController.navigate(DebugRoute) },
+            )
+        }
+        composable<ProfileRoute> { ProfileScreen(onBack = navController::navigateUp) }
+        composable<RemindersRoute> { RemindersScreen(onBack = navController::navigateUp) }
+        composable<ScheduleRoute> { ScheduleScreen(onBack = navController::navigateUp) }
+        composable<WristbandRoute> { WristbandScreen(onBack = navController::navigateUp) }
+        composable<DebugRoute> { DebugScreen(onBack = navController::navigateUp) }
     }
 }

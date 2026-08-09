@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.resurface.resurface.BuildConfig
 import com.resurface.resurface.data.onboarding.OnboardingRepository
+import com.resurface.resurface.dev.DebugPreferences
 import com.resurface.resurface.permission.AppPermission
 import com.resurface.resurface.permission.PermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class AppViewModel @Inject constructor(
     private val onboarding: OnboardingRepository,
     private val permissions: PermissionChecker,
+    private val debugPrefs: DebugPreferences,
 ) : ViewModel() {
 
     private val _startRoute = MutableStateFlow<StartRoute>(StartRoute.Loading)
@@ -32,10 +34,12 @@ class AppViewModel @Inject constructor(
     val permissionStatuses: StateFlow<Map<AppPermission, Boolean>> = _permissionStatuses.asStateFlow()
 
     init {
-        // DEBUG: zera o onboarding a cada launch pra vê-lo sempre — REMOVER depois dos testes.
-        // Reset acontece UMA vez aqui (não no refresh), então "Concluir" leva pra home normalmente.
+        // Reset de onboarding controlado por flag de debug (tela Debug), não mais hardcoded.
+        // Acontece UMA vez aqui (não no refresh), antes de computar a rota. Release ignora (BuildConfig).
         viewModelScope.launch {
-            if (BuildConfig.DEBUG) onboarding.resetForTesting()
+            if (BuildConfig.DEBUG && debugPrefs.alwaysShowOnboarding.first()) {
+                onboarding.resetForTesting()
+            }
             _permissionStatuses.value = permissions.statuses()
             _startRoute.value = computeStartRoute(onboarding.state.first(), permissions.allRequiredGranted())
         }
