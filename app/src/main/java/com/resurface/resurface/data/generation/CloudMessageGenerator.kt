@@ -37,9 +37,10 @@ class CloudMessageGenerator @Inject constructor(
             A pessoa está há ${moment.minutes} minutos no ${moment.appLabel}, às ${moment.hour}h.$hobbyClause
             Regras rígidas:
             - NÃO diga o que ela deveria estar fazendo.
+            - NÃO USE - nos textos.
             - NÃO afirme o estado mental dela (nada de "no automático", "vidrado", "viciado").
             - NÃO culpe nem envergonhe.
-            Responda em DUAS linhas curtas, sem aspas e sem explicação:
+            Responda em DUAS linhas curtas, em texto humanizado sem aspas e sem explicação:
             linha 1 = a frase principal (máx 8 palavras)
             linha 2 = uma pergunta ou observação leve (máx 10 palavras)
         """.trimIndent()

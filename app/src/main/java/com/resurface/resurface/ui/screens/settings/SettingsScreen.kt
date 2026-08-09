@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.resurface.resurface.BuildConfig
+import com.resurface.resurface.dev.DevToolsSection
 import com.resurface.resurface.domain.model.Tone
 import com.resurface.resurface.ui.theme.ResurfaceTheme
 import com.resurface.resurface.ui.theme.Spacing
@@ -40,6 +42,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         onPauseToday = viewModel::onPauseToday,
         onSetTone = viewModel::onSetTone,
         onToggleHobby = viewModel::onToggleHobby,
+        // Único ponto de contato do dev-tools na produção: some em release (BuildConfig.DEBUG).
+        devTools = { if (BuildConfig.DEBUG) DevToolsSection() },
     )
 }
 
@@ -53,6 +57,7 @@ private fun SettingsContent(
     onSetTone: (Tone) -> Unit,
     onToggleHobby: (String) -> Unit,
     modifier: Modifier = Modifier,
+    devTools: @Composable () -> Unit = {},
 ) {
     var slider by remember(state.limitMinutes) { mutableFloatStateOf(state.limitMinutes.toFloat()) }
     Column(
@@ -98,6 +103,9 @@ private fun SettingsContent(
         } else {
             Button(onClick = onPauseToday, modifier = Modifier.fillMaxWidth()) { Text("Pausar por hoje") }
         }
+
+        // Dev-tools (slot vazio em produção/preview; preenchido só em debug via SettingsScreen).
+        devTools()
     }
 }
 
