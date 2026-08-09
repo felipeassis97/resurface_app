@@ -14,17 +14,19 @@ class TemplateComposer {
     fun compose(profile: Profile, moment: Moment, seed: Int): Message {
         val pool = MessageTemplates.pools.getValue(profile.tone)
         val hobby = profile.anyHobby()
-        val eligible = if (hobby != null) pool else pool.filterNot { it.usesHobby }
+        val hasName = profile.name.isNotBlank()
+        val eligible = pool.filter { (hobby != null || !it.usesHobby) && (hasName || !it.usesName) }
         val pick = eligible[Math.floorMod(seed, eligible.size)]
         return Message(
-            title = fill(pick.title, moment, hobby),
-            body = fill(pick.body, moment, hobby),
+            title = fill(pick.title, moment, hobby, profile.name),
+            body = fill(pick.body, moment, hobby, profile.name),
         )
     }
 
-    /** Substitui os slots {min}/{app}/{hobby} pelo momento e hobby. */
-    private fun fill(text: String, moment: Moment, hobby: String?): String =
+    /** Substitui os slots {min}/{app}/{hobby}/{name} pelo momento, hobby e nome. */
+    private fun fill(text: String, moment: Moment, hobby: String?, name: String): String =
         text.replace("{min}", moment.minutes.toString())
             .replace("{app}", moment.appLabel)
             .replace("{hobby}", hobby ?: "")
+            .replace("{name}", name)
 }

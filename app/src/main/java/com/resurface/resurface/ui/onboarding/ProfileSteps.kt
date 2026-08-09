@@ -40,29 +40,45 @@ import com.resurface.resurface.ui.theme.ResurfaceMotion
 import com.resurface.resurface.ui.theme.ResurfaceTextStyles
 import com.resurface.resurface.ui.theme.Spacing
 
-/** Hobbies oferecidos (mesma lista dos Ajustes). */
+/** Hobbies oferecidos (mesma lista dos ajustes). */
 internal val ONBOARDING_HOBBIES =
-    listOf("Ler", "Música", "Exercício", "Cozinhar", "Jogos", "Estudar", "Amigos", "Séries")
+    listOf("Reading", "Music", "Exercise", "Cooking", "Games", "Studying", "Friends", "Series")
 
-/** Tons + exemplo de mensagem no tom (F1). */
+/** Tons + exemplo de mensagem no tom. */
 internal val ONBOARDING_TONES = listOf(
-    Triple(Tone.DIRETO, "Direto", "22 minutos no Instagram."),
-    Triple(Tone.GENTIL, "Gentil", "Ei — já faz um tempinho por aqui. Tudo bem?"),
-    Triple(Tone.BEM_HUMORADO, "Bem-humorado", "Placar: algoritmo 22, você 0."),
+    Triple(Tone.DIRETO, "Direct", "22 minutes on Instagram."),
+    Triple(Tone.GENTIL, "Gentle", "Hey, it has been a little while. All good?"),
+    Triple(Tone.BEM_HUMORADO, "Playful", "Score: algorithm 22, you 0."),
 )
 
-/** Passo do tom: 3 cards selecionáveis com exemplo. */
+/** Passo nome + tom: campo de nome no topo, depois 3 cards de tom. Nome obrigatório pra avançar. */
 @Composable
-fun ToneStep(stepIndex: Int, selected: Tone, onSelect: (Tone) -> Unit, onNext: () -> Unit) {
+fun ToneStep(
+    stepIndex: Int,
+    name: String,
+    onName: (String) -> Unit,
+    selected: Tone,
+    onSelect: (Tone) -> Unit,
+    canAdvance: Boolean,
+    onNext: () -> Unit,
+) {
     OnboardingScaffold(
         stepIndex = stepIndex,
         icon = Icons.Filled.ChatBubbleOutline,
-        title = "Como quer ser lembrado?",
-        body = "O aviso é escrito nesse tom. Dá pra trocar depois nos Ajustes.",
-        primaryLabel = "Avançar",
+        title = "About you",
+        body = "How should we call you, and how do you want to be reminded? You can change this later in Settings.",
+        primaryLabel = "Next",
         onPrimary = onNext,
+        primaryEnabled = canAdvance,
     ) { reduced ->
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.space3)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.space4)) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = onName,
+                label = { Text("Your name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
             ONBOARDING_TONES.forEach { (tone, label, example) ->
                 ToneCard(
                     label = label,
@@ -130,9 +146,9 @@ fun HobbiesStep(
     OnboardingScaffold(
         stepIndex = stepIndex,
         icon = Icons.Filled.Favorite,
-        title = "O que você gosta de fazer?",
-        body = "Só pra dar textura à mensagem — nunca vira cobrança. Escolha ao menos um.",
-        primaryLabel = "Avançar",
+        title = "What do you enjoy?",
+        body = "Just to add texture to the reminder. It never becomes pressure. Pick at least one.",
+        primaryLabel = "Next",
         onPrimary = onNext,
         primaryEnabled = canAdvance,
     ) {
@@ -149,7 +165,7 @@ fun HobbiesStep(
             OutlinedTextField(
                 value = hobbyFree.orEmpty(),
                 onValueChange = onFree,
-                label = { Text("Outro (opcional)") },
+                label = { Text("Other (optional)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -157,7 +173,7 @@ fun HobbiesStep(
     }
 }
 
-/** Passo do limite: número grande em Geist Mono rolando + slider 10–60. */
+/** Passo do limite: número grande em Geist Mono rolando + slider 10 a 60. */
 @Composable
 fun LimitStep(stepIndex: Int, minutes: Int, onSet: (Int) -> Unit, onNext: () -> Unit) {
     var slider by remember(minutes) { mutableFloatStateOf(minutes.toFloat()) }
@@ -165,9 +181,9 @@ fun LimitStep(stepIndex: Int, minutes: Int, onSet: (Int) -> Unit, onNext: () -> 
     OnboardingScaffold(
         stepIndex = stepIndex,
         icon = Icons.Filled.Timer,
-        title = "Avisar depois de quantos minutos?",
-        body = "É o limite do primeiro aviso. O padrão é 20; dá pra mudar quando quiser.",
-        primaryLabel = "Avançar",
+        title = "Remind me after how many minutes?",
+        body = "This is the first reminder threshold. Default is 20, change it anytime.",
+        primaryLabel = "Next",
         onPrimary = onNext,
     ) {
         Column(
@@ -194,7 +210,7 @@ fun LimitStep(stepIndex: Int, minutes: Int, onSet: (Int) -> Unit, onNext: () -> 
                     )
                 }
             }
-            Text("minutos", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            Text("minutes", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
             Slider(
                 value = slider,
                 onValueChange = { slider = it },

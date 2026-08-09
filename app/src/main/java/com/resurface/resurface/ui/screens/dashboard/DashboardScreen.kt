@@ -5,189 +5,287 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.resurface.resurface.domain.AlertRow
 import com.resurface.resurface.domain.DayBar
 import com.resurface.resurface.domain.InsightsUiState
 import com.resurface.resurface.domain.WeekSummary
+import com.resurface.resurface.domain.model.Message
+import com.resurface.resurface.ui.theme.ResurfaceShapes
 import com.resurface.resurface.ui.theme.ResurfaceTextStyles
 import com.resurface.resurface.ui.theme.ResurfaceTheme
 import com.resurface.resurface.ui.theme.Spacing
 import kotlin.math.abs
 
-/** Tela inicial única: contador vivo + observações. Top bar com acesso aos ajustes. */
-@OptIn(ExperimentalMaterial3Api::class)
+/** Tela inicial: header com saudação, atividade da semana em cards, gráficos. */
 @Composable
 fun DashboardScreen(
     onOpenSettings: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
-        topBar = {
-            TopAppBar(
-                title = { Text("Resurface", style = MaterialTheme.typography.titleLarge) },
-                actions = {
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
-        },
-    ) { inner ->
-        DashboardContent(state, Modifier.padding(inner))
+    Scaffold(containerColor = MaterialTheme.colorScheme.surface) { inner ->
+        DashboardContent(state, onOpenSettings, Modifier.padding(inner))
     }
 }
 
-/** Conteúdo stateless do dashboard. */
 @Composable
-private fun DashboardContent(state: DashboardUiState, modifier: Modifier = Modifier) {
+private fun DashboardContent(state: DashboardUiState, onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = Spacing.space4),
-        verticalArrangement = Arrangement.spacedBy(Spacing.space6),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(Spacing.space4),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = Spacing.space4, bottom = Spacing.space8),
     ) {
-        item { Hero(state) }
-        item { WeekCard(state.insights.week, state.insights.crossAppEpisodes) }
-        item { DayBars(state.insights.dayBars) }
-        item { HourHeatmap(state.insights.hourBuckets) }
-        if (state.insights.videos != null) {
-            item { BehaviorCard(state.insights.videos!!, state.insights.hesitationPct) }
-        }
-        item { AlertsSection(state.insights.alerts, state.insights.eraHoraPct) }
+        item { Header(state.name, onOpenSettings) }
+        state.tip?.let { tip -> item { TipCard(tip) } }
+        if (state.live.active) item { LiveCard(state.live) }
+        item { SectionLabel("Your activity", "This week") }
+        item { KpiRow(state.insights.week) }
+        item { DayChartCard(state.insights.week, state.insights.dayBars) }
+        item { HourCard(state.insights.hourBuckets) }
+        if (state.insights.videos != null) item { BehaviorCard(state.insights.videos!!, state.insights.hesitationPct) }
     }
 }
 
-/** Hero adaptativo: ativo → contador vivo; ocioso → total da semana. */
+/** Header: avatar (inicial), "Welcome back" + nome, e o botão de ajustes. */
 @Composable
-private fun Hero(state: DashboardUiState) {
-    val live = state.live
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.space6)) {
-        if (live.active) {
-            Text(live.minutes.toString(), style = ResurfaceTextStyles.statDisplay, color = MaterialTheme.colorScheme.primary)
-            Text("minutes on ${live.appLabel}", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-        } else {
-            Text("This week", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(formatHm(state.insights.week.totalMinutes), style = ResurfaceTextStyles.statDisplay, color = MaterialTheme.colorScheme.primary)
-            Text("at rest", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun Header(name: String, onOpenSettings: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = Spacing.space2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.space3),
+    ) {
+        Box(
+            modifier = Modifier.size(48.dp).clip(ResurfaceShapes.full).background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = name.firstOrNull()?.uppercase() ?: "R",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
         }
-        if (live.pausedToday) {
-            Text("paused for today", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.padding(top = Spacing.space2))
+        Column(Modifier.weight(1f)) {
+            Text("Welcome back", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = if (name.isBlank()) "Hi" else name,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Box(
+            modifier = Modifier.size(44.dp).clip(ResurfaceShapes.full).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            IconButton(onClick = onOpenSettings) {
+                Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurface)
+            }
         }
     }
 }
 
-/** Resumo da semana: episódios, média, tendência, cruza-apps. */
+/** Card destacado do contador vivo (só quando há episódio ativo). */
 @Composable
-private fun WeekCard(week: WeekSummary, crossApp: Int) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.space1)) {
-        Text("This week", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun LiveCard(live: LiveState) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(ResurfaceShapes.largeIncreased)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(Spacing.space4),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("On ${live.appLabel} now", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            if (live.pausedToday) {
+                Text("paused for today", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+        }
         Text(
-            "${week.episodes} episodes · avg ${week.avgMinutes} min",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            "${live.minutes}",
+            style = ResurfaceTextStyles.statDisplay,
+            color = MaterialTheme.colorScheme.primary,
         )
-        week.trendPct?.let {
-            val down = it <= 0
-            Text(
-                (if (down) "▼ " else "▲ ") + "${abs(it)}% vs last week",
-                style = MaterialTheme.typography.labelLarge,
-                color = if (down) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
-            )
-        }
-        if (crossApp > 0) {
-            Text(
-                "$crossApp episodes crossed both apps",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Text(" min", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
     }
 }
 
-/** Barras dos últimos 7 dias; o maior em âmbar, o resto neutro. */
+/** Rótulo de seção + chip estático da faixa (só "This week"; não é dropdown, o dado é semanal). */
 @Composable
-private fun DayBars(bars: List<DayBar>) {
+private fun SectionLabel(title: String, range: String) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+        Text(
+            range,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .clip(ResurfaceShapes.full)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(horizontal = Spacing.space3, vertical = Spacing.space1),
+        )
+    }
+}
+
+/** Dois tiles lado a lado: tempo e episódios da semana. */
+@Composable
+private fun KpiRow(week: WeekSummary) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.space4), modifier = Modifier.fillMaxWidth()) {
+        KpiTile(Icons.Filled.Schedule, "Time", formatHm(week.totalMinutes), Modifier.weight(1f))
+        KpiTile(Icons.Filled.Bolt, "Episodes", week.episodes.toString(), Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun KpiTile(icon: ImageVector, label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(ResurfaceShapes.largeIncreased)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(Spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.space2)) {
+            Box(
+                modifier = Modifier.size(32.dp).clip(ResurfaceShapes.full).background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                contentAlignment = Alignment.Center,
+            ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp)) }
+            Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Text(value, style = ResurfaceTextStyles.statBody.copy(fontSize = MaterialTheme.typography.headlineMedium.fontSize), color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+/** Card do gráfico por dia, estilo da inspiração: barra de pico em âmbar + callout. */
+@Composable
+private fun DayChartCard(week: WeekSummary, bars: List<DayBar>) {
     val max = (bars.maxOfOrNull { it.minutes } ?: 0).coerceAtLeast(1)
-    Column {
-        Text("By day", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(ResurfaceShapes.largeIncreased)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(Spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Short video by day", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+            week.trendPct?.let {
+                val down = it <= 0
+                Text(
+                    (if (down) "▼ " else "▲ ") + "${abs(it)}%",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (down) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+                )
+            }
+        }
         Row(
-            modifier = Modifier.fillMaxWidth().height(120.dp).padding(top = Spacing.space2),
+            modifier = Modifier.fillMaxWidth().height(180.dp),
             horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
             verticalAlignment = Alignment.Bottom,
         ) {
             bars.forEach { bar ->
                 val isMax = bar.minutes == max && bar.minutes > 0
-                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height((100 * bar.minutes / max).dp.coerceAtLeast(2.dp))
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(if (isMax) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest),
+                val frac = (bar.minutes.toFloat() / max).coerceIn(0.02f, 1f)
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    // slot do callout (altura fixa; só o pico mostra o valor)
+                    Box(Modifier.height(16.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        if (isMax) {
+                            Text(
+                                formatHmShort(bar.minutes),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 9.sp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                modifier = Modifier
+                                    .clip(ResurfaceShapes.full)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
+                    // área das barras (com peso: escala sem estourar)
+                    Box(Modifier.weight(1f).fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.BottomCenter) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(frac)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(
+                                    if (isMax) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+                                ),
+                        )
+                    }
+                    Text(
+                        bar.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = Spacing.space2),
                     )
-                    Text(bar.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
     }
 }
 
-/** Heatmap por hora (24 baldes): intensidade âmbar por minutos de início. */
+/** Heatmap por hora, num card. */
 @Composable
-private fun HourHeatmap(buckets: List<Int>) {
+private fun HourCard(buckets: List<Int>) {
     val max = (buckets.maxOrNull() ?: 0).coerceAtLeast(1)
     val empty = MaterialTheme.colorScheme.surfaceContainerHighest
     val full = MaterialTheme.colorScheme.primary
-    Column {
-        Text("By hour", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(
-            modifier = Modifier.fillMaxWidth().height(40.dp).padding(top = Spacing.space2),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(ResurfaceShapes.largeIncreased)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(Spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+    ) {
+        Text("By hour", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+        Row(modifier = Modifier.fillMaxWidth().height(40.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             buckets.forEach { minutes ->
-                val t = minutes.toFloat() / max
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(lerp(empty, full, t)),
+                    modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(3.dp))
+                        .background(lerp(empty, full, minutes.toFloat() / max)),
                 )
             }
         }
-        Row(modifier = Modifier.fillMaxWidth().padding(top = Spacing.space1), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("0", "6", "12", "18", "23").forEach {
                 Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -195,57 +293,78 @@ private fun HourHeatmap(buckets: List<Int>) {
     }
 }
 
-/** Comportamento (só quando a acessibilidade dá dado). */
 @Composable
 private fun BehaviorCard(videos: Int, hesitationPct: Int?) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.space1)) {
-        Text("Behavior", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("$videos videos this week", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+    Column(
+        modifier = Modifier.fillMaxWidth().clip(ResurfaceShapes.largeIncreased)
+            .background(MaterialTheme.colorScheme.surfaceContainer).padding(Spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(Spacing.space1),
+    ) {
+        Text("Behavior", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+        Text("$videos videos this week", style = ResurfaceTextStyles.statBody, color = MaterialTheme.colorScheme.onSurface)
         hesitationPct?.let {
             Text("$it% of swipes started and returned", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
-/** Avisos + a razão S2. Empty state calmo (P5/P6). */
+/** Card de tip no topo: observação pessoal em até 2 linhas. */
 @Composable
-private fun AlertsSection(alerts: List<AlertRow>, eraHoraPct: Int?) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.space1)) {
-        Text(
-            eraHoraPct?.let { "Alerts — $it% \"right time\"" } ?: "Alerts",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (alerts.isEmpty()) {
-            Text("No alerts yet — enjoy the quiet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        alerts.take(20).forEach { a ->
-            Text("${a.appLabel} — ${a.response}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+private fun TipCard(tip: Message) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(ResurfaceShapes.largeIncreased)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(Spacing.space4),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.space3),
+    ) {
+        Box(
+            modifier = Modifier.size(36.dp).clip(ResurfaceShapes.full).background(MaterialTheme.colorScheme.surface),
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Filled.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(tip.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            if (tip.body.isNotBlank()) {
+                Text(tip.body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
         }
     }
 }
 
 private fun formatHm(minutes: Int): String =
-    if (minutes >= 60) "${minutes / 60}h ${minutes % 60}min" else "$minutes min"
+    if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m"
 
-@Preview(showBackground = true)
-@Composable
-private fun DashboardActivePreview() {
-    ResurfaceTheme {
-        DashboardContent(
-            DashboardUiState(
-                live = LiveState(active = true, minutes = 22, appLabel = "Instagram"),
-                insights = sampleInsights(),
-            )
-        )
-    }
+/** Versão compacta pro callout estreito: "3h37" / "3h" / "42m". */
+private fun formatHmShort(minutes: Int): String = when {
+    minutes >= 60 && minutes % 60 == 0 -> "${minutes / 60}h"
+    minutes >= 60 -> "${minutes / 60}h${minutes % 60}"
+    else -> "${minutes}m"
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun DashboardIdlePreview() {
     ResurfaceTheme {
-        DashboardContent(DashboardUiState(live = LiveState(active = false), insights = sampleInsights()))
+        DashboardContent(
+            DashboardUiState(
+                name = "Felipe",
+                tip = Message("You start most between 23h and 0h.", "That is your busiest window."),
+                insights = sampleInsights(),
+            ),
+            onOpenSettings = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DashboardActivePreview() {
+    ResurfaceTheme {
+        DashboardContent(
+            DashboardUiState(name = "Felipe", live = LiveState(active = true, minutes = 22, appLabel = "Instagram"), insights = sampleInsights()),
+            onOpenSettings = {},
+        )
     }
 }
 
@@ -256,8 +375,5 @@ private fun sampleInsights() = InsightsUiState(
         DayBar("Fri", 29), DayBar("Sat", 20), DayBar("Sun", 18),
     ),
     hourBuckets = List(24) { if (it in 22..23 || it == 0) 40 else if (it in 18..21) 15 else it % 5 },
-    crossAppEpisodes = 6,
-    videos = 340,
-    hesitationPct = 8,
-    eraHoraPct = 71,
+    crossAppEpisodes = 6, videos = 340, hesitationPct = 8, eraHoraPct = 71,
 )

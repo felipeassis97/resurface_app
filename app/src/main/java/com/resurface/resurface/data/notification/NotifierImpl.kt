@@ -27,10 +27,10 @@ class NotifierImpl @Inject constructor(
     /** Cria os dois canais; a importância trava após criar (por isso ids fixos). */
     override fun ensureChannels() {
         manager.createNotificationChannel(
-            NotificationChannel(CH_ONGOING, "Contador", NotificationManager.IMPORTANCE_LOW)
+            NotificationChannel(CH_ONGOING, "Counter", NotificationManager.IMPORTANCE_LOW)
         )
         manager.createNotificationChannel(
-            NotificationChannel(CH_ALERT, "Aviso", NotificationManager.IMPORTANCE_HIGH)
+            NotificationChannel(CH_ALERT, "Alert", NotificationManager.IMPORTANCE_HIGH)
         )
     }
 
@@ -55,8 +55,8 @@ class NotifierImpl @Inject constructor(
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
-            .addAction(0, "era hora", action(OutcomeReceiver.ACTION_ERA_HORA, alertId))
-            .addAction(0, "agora não", action(OutcomeReceiver.ACTION_AGORA_NAO, alertId))
+            .addAction(0, "right time", action(OutcomeReceiver.ACTION_ERA_HORA, alertId))
+            .addAction(0, "not now", action(OutcomeReceiver.ACTION_AGORA_NAO, alertId))
             .build()
         manager.notify(NOTIF_ALERT, notification)
         // Canal sem tela: pulsa a pulseira junto (no-op se não conectada). Todo aviso, incl. teste.

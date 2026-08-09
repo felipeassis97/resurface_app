@@ -22,18 +22,25 @@ class ProfileRepository @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher,
 ) {
     private object Keys {
+        val NAME = stringPreferencesKey("profile_name")
         val TONE = stringPreferencesKey("profile_tone")
         val HOBBIES = stringSetPreferencesKey("profile_hobbies")
         val HOBBY_FREE = stringPreferencesKey("profile_hobby_free")
     }
 
-    /** Perfil gravado, com defaults (tom GENTIL, sem hobbies). */
+    /** Perfil gravado, com defaults (sem nome, tom GENTIL, sem hobbies). */
     val profile: Flow<Profile> = dataStore.data.map { prefs ->
         Profile(
+            name = prefs[Keys.NAME] ?: "",
             tone = prefs[Keys.TONE]?.let { runCatching { Tone.valueOf(it) }.getOrNull() } ?: Tone.GENTIL,
             hobbies = prefs[Keys.HOBBIES] ?: emptySet(),
             hobbyFree = prefs[Keys.HOBBY_FREE],
         )
+    }
+
+    /** Grava o nome pelo qual a pessoa quer ser chamada. */
+    suspend fun setName(name: String) = withContext(io) {
+        dataStore.edit { it[Keys.NAME] = name.trim() }
     }
 
     /** Grava o tom escolhido. */

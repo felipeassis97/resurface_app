@@ -36,7 +36,7 @@ class MonitorService : Service() {
         notifier.ensureChannels()
         startForeground(
             NOTIF_ONGOING,
-            notifier.ongoing("acompanhando"),
+            notifier.ongoing("Tracking"),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
         )
         // Auto-reconecta à pulseira lembrada (passivo, no-op se nada lembrado/sem permissão).

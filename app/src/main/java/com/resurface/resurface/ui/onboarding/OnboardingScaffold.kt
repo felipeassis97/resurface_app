@@ -137,7 +137,7 @@ fun PermissionStatusChip(granted: Boolean?, reducedMotion: Boolean, modifier: Mo
             )
         }
         Text(
-            text = if (granted) "concedido" else "pendente",
+            text = if (granted) "granted" else "pending",
             style = MaterialTheme.typography.labelMedium,
             color = if (granted) MaterialTheme.colorScheme.onPrimaryContainer
             else MaterialTheme.colorScheme.onSurfaceVariant,

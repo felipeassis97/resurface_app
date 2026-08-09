@@ -22,12 +22,12 @@ import com.resurface.resurface.ui.theme.Spacing
 
 /** Rótulo humano do estado do link da pulseira. */
 private fun WristbandConnectionState.label(): String = when (this) {
-    is WristbandConnectionState.Connected -> "Pulseira conectada"
-    is WristbandConnectionState.Connecting -> "Conectando…"
-    WristbandConnectionState.Scanning -> "Procurando pulseira…"
-    is WristbandConnectionState.Disconnected -> "Pulseira desconectada"
-    is WristbandConnectionState.Failed -> "Falha: ${detail ?: reason.name}"
-    WristbandConnectionState.Idle -> "Pulseira não conectada"
+    is WristbandConnectionState.Connected -> "Wristband connected"
+    is WristbandConnectionState.Connecting -> "Connecting…"
+    WristbandConnectionState.Scanning -> "Looking for wristband…"
+    is WristbandConnectionState.Disconnected -> "Wristband disconnected"
+    is WristbandConnectionState.Failed -> "Failed: ${detail ?: reason.name}"
+    WristbandConnectionState.Idle -> "Wristband not connected"
 }
 
 /**
@@ -47,7 +47,7 @@ fun WristbandSettingsSection(
     ) { grants -> if (grants.values.all { it }) onPair() }
 
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.space2)) {
-        Text("Pulseira", style = MaterialTheme.typography.titleMedium)
+        Text("Wristband", style = MaterialTheme.typography.titleMedium)
         Text(state.label(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
         Button(
             onClick = {
@@ -56,12 +56,12 @@ fun WristbandSettingsSection(
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Procurar e conectar") }
+        ) { Text("Scan and connect") }
 
         // Intensidade do pulso (null = auto/padrão do firmware).
         var slider by remember(intensity) { mutableFloatStateOf((intensity ?: DEFAULT_INTENSITY).toFloat()) }
         Text(
-            if (intensity == null) "Intensidade: automática" else "Intensidade: ${slider.toInt()}",
+            if (intensity == null) "Intensity: automatic" else "Intensity: ${slider.toInt()}",
             style = MaterialTheme.typography.bodyMedium,
         )
         Slider(
@@ -71,7 +71,7 @@ fun WristbandSettingsSection(
             valueRange = 0f..255f,
             modifier = Modifier.fillMaxWidth(),
         )
-        TextButton(onClick = { onSetIntensity(null) }) { Text("Usar intensidade automática") }
+        TextButton(onClick = { onSetIntensity(null) }) { Text("Use automatic intensity") }
     }
 }
 

@@ -51,22 +51,22 @@ fun PermissionRecoveryScreen(appViewModel: AppViewModel) {
 
     val (title, body, action, onAction) = when (missing) {
         AppPermission.USAGE_ACCESS -> RecoveryContent(
-            title = "Falta o acesso ao uso",
-            body = "É o contador — sem ele o Resurface não sabe quanto tempo você passou no vídeo curto. Reative pra voltar a funcionar.",
-            action = "Abrir configurações",
+            title = "Usage access is off",
+            body = "This is the counter. Without it Resurface cannot tell how long you spent on short video. Turn it back on to keep working.",
+            action = "Open settings",
             onAction = { appViewModel.settingsIntentFor(AppPermission.USAGE_ACCESS)?.let(context::startActivity) },
         )
         AppPermission.NOTIFICATIONS -> RecoveryContent(
-            title = "Falta a permissão de notificações",
-            body = "Sem ela o aviso não aparece — e o aviso é o produto. Reative pra voltar a funcionar.",
-            action = "Permitir",
+            title = "Notifications are off",
+            body = "Without them the alert never shows, and the alert is the product. Turn it back on to keep working.",
+            action = "Allow",
             onAction = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             },
         )
-        else -> RecoveryContent("Tudo certo", "As permissões estão ok.", "Continuar") { appViewModel.refresh() }
+        else -> RecoveryContent("All good", "Permissions are in order.", "Continue") { appViewModel.refresh() }
     }
 
     Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { inner ->

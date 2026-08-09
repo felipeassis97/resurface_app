@@ -37,16 +37,28 @@ fun ResurfaceApp() {
         onPauseOrDispose { }
     }
 
+    // Chaveia o Crossfade pelo TIPO de rota, não pela rota inteira: durante o onboarding o
+    // `refresh()` do resume recomputa o step, mas o pager (rememberPagerState) não deve reiniciar.
+    val screen = when (route) {
+        StartRoute.Loading -> "loading"
+        is StartRoute.Onboarding -> "onboarding"
+        StartRoute.PermissionRecovery -> "recovery"
+        StartRoute.Main -> "main"
+    }
     Crossfade(
-        targetState = route,
+        targetState = screen,
         animationSpec = tween(if (reduced) 0 else ResurfaceMotion.NudgeEnterMillis, easing = ResurfaceMotion.Emphasized),
         label = "route",
-    ) { r ->
-        when (r) {
-            StartRoute.Loading -> Box(modifier = Modifier.fillMaxSize())
-            is StartRoute.Onboarding -> OnboardingFlow(appViewModel, r.step, statuses)
-            StartRoute.PermissionRecovery -> PermissionRecoveryScreen(appViewModel)
-            StartRoute.Main -> {
+    ) { s ->
+        when (s) {
+            "loading" -> Box(modifier = Modifier.fillMaxSize())
+            "onboarding" -> OnboardingFlow(
+                appViewModel,
+                (route as? StartRoute.Onboarding)?.step ?: com.resurface.resurface.ui.onboarding.OnboardingStep.WELCOME,
+                statuses,
+            )
+            "recovery" -> PermissionRecoveryScreen(appViewModel)
+            "main" -> {
                 LaunchedEffect(Unit) {
                     context.startForegroundService(Intent(context, MonitorService::class.java))
                 }

@@ -23,26 +23,27 @@ class CloudMessageGenerator @Inject constructor(
         return Message(title = lines[0], body = lines.getOrElse(1) { "" })
     }
 
-    /** Prompt restrito: uma simulação fiel do que um modelo pequeno on-device daria. */
+    /** Prompt restrito: uma simulação fiel do que um modelo pequeno on-device daria (comentário PT, prompt EN). */
     private fun buildPrompt(profile: Profile, moment: Moment): String {
-        val tom = when (profile.tone) {
-            Tone.DIRETO -> "direto e factual"
-            Tone.GENTIL -> "gentil e acolhedor"
-            Tone.BEM_HUMORADO -> "bem-humorado (mire o algoritmo/feed, nunca a pessoa)"
+        val tone = when (profile.tone) {
+            Tone.DIRETO -> "direct and factual"
+            Tone.GENTIL -> "gentle and warm"
+            Tone.BEM_HUMORADO -> "playful (aim at the algorithm/feed, never the person)"
         }
+        val nameClause = if (profile.name.isNotBlank()) " Their name is ${profile.name} (you may address them by it)." else ""
         val hobby = profile.anyHobby()
-        val hobbyClause = if (hobby != null) " A pessoa gosta de $hobby (mencione de leve, como convite, nunca obrigação)." else ""
+        val hobbyClause = if (hobby != null) " They enjoy $hobby (mention it lightly, as an invitation, never an obligation)." else ""
         return """
-            Você escreve UM lembrete curto de tempo de tela, em português do Brasil, no tom $tom.
-            A pessoa está há ${moment.minutes} minutos no ${moment.appLabel}, às ${moment.hour}h.$hobbyClause
-            Regras rígidas:
-            - NÃO diga o que ela deveria estar fazendo.
-            - NÃO USE - nos textos.
-            - NÃO afirme o estado mental dela (nada de "no automático", "vidrado", "viciado").
-            - NÃO culpe nem envergonhe.
-            Responda em DUAS linhas curtas, em texto humanizado sem aspas e sem explicação:
-            linha 1 = a frase principal (máx 8 palavras)
-            linha 2 = uma pergunta ou observação leve (máx 10 palavras)
+            Write ONE short screen-time reminder, in English, in a $tone tone.$nameClause
+            They have been on ${moment.appLabel} for ${moment.minutes} minutes, at ${moment.hour}h.$hobbyClause
+            Strict rules:
+            - Do NOT say what they should be doing.
+            - Do NOT use dashes in the text.
+            - Do NOT assert their mental state (no "on autopilot", "glued", "addicted").
+            - Do NOT blame or shame.
+            Reply in TWO short lines, plain human text, no quotes and no explanation:
+            line 1 = the main sentence (max 8 words)
+            line 2 = a light question or remark (max 10 words)
         """.trimIndent()
     }
 }

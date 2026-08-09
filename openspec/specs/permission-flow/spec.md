@@ -23,22 +23,30 @@ O fluxo SHALL levar o usuário a conceder o acesso ao uso (tela do sistema) e as
 - **THEN** o app dispara o diálogo de permissão de notificações e, ao conceder, permite avançar
 
 ### Requirement: Bateria e passo do Samsung
-O fluxo SHALL oferecer, **em sua própria tela**, a isenção de otimização de bateria e explicar o passo manual de adicionar o app em "apps que nunca dormem" (D23), já que a isenção padrão não vence a suspensão do One UI. Este passo SHALL ser adiável ("depois") sem travar o fluxo.
+O fluxo SHALL oferecer, em sua própria tela, a isenção de otimização de bateria e explicar o passo manual de "apps que nunca dormem" (D23). A ação SHALL abrir de fato a tela do sistema: tentar o pedido direto de isenção e, em falha, cair na tela de lista de otimização de bateria. O passo SHALL refletir o estado atual (já isento → seguir) e SHALL ser adiável sem travar.
 
-#### Scenario: Oferecer isenção + instruir Samsung
-- **WHEN** a tela de bateria aparece
-- **THEN** o app oferece pedir a isenção e mostra a instrução do passo manual do Samsung
+#### Scenario: Abrir a isenção funciona
+- **WHEN** o usuário toca em pedir a isenção de bateria
+- **THEN** o app abre a tela do sistema correspondente (pedido direto ou, em falha, a lista de otimização)
 
-#### Scenario: Adiar a bateria não trava
-- **WHEN** o usuário escolhe "depois" na tela de bateria
+#### Scenario: Já isento reflete o estado
+- **WHEN** o app já está isento da otimização de bateria
+- **THEN** o passo mostra o estado concedido e permite continuar
+
+#### Scenario: Adiar não trava
+- **WHEN** o usuário escolhe adiar o passo de bateria
 - **THEN** o fluxo avança normalmente
 
 ### Requirement: Acessibilidade opcional e pulável
-O fluxo SHALL oferecer ligar a acessibilidade (dado de comportamento) **em sua própria tela, após o perfil**, como passo **opcional**, explicando o passo de restricted settings em sideload, e permitir pular sem travar (D15).
+O fluxo SHALL oferecer ligar a acessibilidade em sua própria tela, após o perfil, como passo opcional, explicando o passo de restricted settings em sideload, e permitir pular. Ao retornar das configurações com a acessibilidade **ligada**, o passo SHALL refletir o novo estado (ação passa a "continuar"), sem exigir reiniciar o app.
 
-#### Scenario: Pular a acessibilidade permite concluir
+#### Scenario: Ligar e voltar reflete o estado
+- **WHEN** o usuário liga a acessibilidade nas configurações e volta pro app
+- **THEN** o passo mostra o estado ligado e a ação vira "continuar"
+
+#### Scenario: Pular permite concluir
 - **WHEN** o usuário pula o passo de acessibilidade
-- **THEN** o fluxo segue pra conclusão (o app funciona, só sem o dado de comportamento)
+- **THEN** o fluxo segue pra conclusão (o app funciona sem o dado de comportamento)
 
 ### Requirement: Fluxo paginado, um conceito por tela
 O onboarding SHALL ser um fluxo paginado com **um conceito por tela** — welcome, cada permissão em sua própria tela, cada pergunta de perfil em sua própria tela e a conclusão — com indicador de progresso e navegação pra frente/trás compatível com o predictive back (targetSdk 36).
@@ -52,14 +60,18 @@ O onboarding SHALL ser um fluxo paginado com **um conceito por tela** — welcom
 - **THEN** o passo anterior reaparece com o estado já respondido/concedido preservado
 
 ### Requirement: Coletar o perfil no fluxo
-O fluxo SHALL coletar, em telas próprias, o **tom** (direto/gentil/bem-humorado), os **hobbies** (múltipla escolha + campo livre) e o **limite de minutos** (10–60, padrão 20), persistindo cada resposta. As três respostas SHALL ser obrigatórias para concluir: um tom escolhido, ao menos um hobby, e um limite dentro da faixa.
+O fluxo SHALL coletar, em telas próprias, o **nome + tom** (na mesma tela), os **hobbies** (múltipla escolha + campo livre) e o **limite de minutos** (10–60, padrão 20), persistindo cada resposta. As respostas SHALL ser obrigatórias pra concluir: um nome informado, um tom escolhido, ao menos um hobby, e um limite dentro da faixa.
+
+#### Scenario: Nome e tom no mesmo passo
+- **WHEN** o passo de perfil aparece
+- **THEN** ele pede o nome (campo de texto) e o tom (opções) na mesma tela
 
 #### Scenario: Perfil incompleto bloqueia a conclusão
-- **WHEN** falta escolher o tom, os hobbies ou o limite
-- **THEN** a conclusão fica indisponível até as três estarem respondidas
+- **WHEN** falta o nome, o tom, os hobbies ou o limite
+- **THEN** a conclusão fica indisponível até as respostas estarem completas
 
 #### Scenario: Perfil completo permite concluir
-- **WHEN** tom, ao menos um hobby e um limite válido foram respondidos
+- **WHEN** nome, tom, ao menos um hobby e um limite válido foram respondidos
 - **THEN** o fluxo permite avançar pra conclusão
 
 ### Requirement: Concluir marca o onboarding
@@ -72,4 +84,11 @@ Concluir SHALL exigir **todas as obrigatórias concedidas** e o **perfil respond
 #### Scenario: Falta obrigatória não conclui
 - **WHEN** o perfil está respondido mas falta uma obrigatória
 - **THEN** o onboarding não conclui e o passo da obrigatória faltante permanece pendente
+
+### Requirement: Copy do onboarding em inglês, sem travessões
+Todo o texto visível do onboarding SHALL estar em inglês e SHALL evitar travessões (`—`), usando pontuação simples, pra soar humano.
+
+#### Scenario: Texto em inglês e limpo
+- **WHEN** qualquer tela do onboarding é exibida
+- **THEN** o texto está em inglês e não usa travessões
 

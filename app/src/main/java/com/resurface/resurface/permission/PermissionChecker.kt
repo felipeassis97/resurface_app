@@ -31,9 +31,9 @@ class PermissionChecker @Inject constructor(
         AppPermission.ACCESSIBILITY -> isAccessibilityEnabled()
     }
 
-    /** Status ao vivo de todas as permissões obrigatórias. */
+    /** Status ao vivo de TODAS as permissões (inclui a acessibilidade opcional, pro onboarding refletir). */
     fun statuses(): Map<AppPermission, Boolean> =
-        AppPermission.required.associateWith { isGranted(it) }
+        AppPermission.entries.associateWith { isGranted(it) }
 
     /** Verdadeiro se todas as obrigatórias estão concedidas. */
     fun allRequiredGranted(): Boolean = AppPermission.required.all { isGranted(it) }

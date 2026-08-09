@@ -23,6 +23,7 @@ import javax.inject.Inject
 data class SettingsUiState(
     val limitMinutes: Int = ConfigRepository.DEFAULT_LIMIT,
     val pausedToday: Boolean = false,
+    val name: String = "",
     val tone: Tone = Tone.GENTIL,
     val hobbies: Set<String> = emptySet(),
     val schedule: Schedule = Schedule(),
@@ -40,7 +41,7 @@ class SettingsViewModel @Inject constructor(
     /** Espelha config + perfil + intensidade da pulseira. Repositório é a fonte da verdade. */
     val uiState: StateFlow<SettingsUiState> =
         combine(config.limitMinutes, config.pausedToday, config.schedule, profile.profile, wristbandPrefs.intensity) { limit, paused, sched, prof, intensity ->
-            SettingsUiState(limit, paused, prof.tone, prof.hobbies, sched, intensity)
+            SettingsUiState(limit, paused, prof.name, prof.tone, prof.hobbies, sched, intensity)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     /** Estado do link BLE da pulseira, observado pela UI. */
@@ -54,6 +55,11 @@ class SettingsViewModel @Inject constructor(
     /** Ativa "pausar por hoje" (D11). */
     fun onPauseToday() {
         viewModelScope.launch { config.pauseForToday() }
+    }
+
+    /** Troca o nome do usuário. */
+    fun onSetName(name: String) {
+        viewModelScope.launch { profile.setName(name) }
     }
 
     /** Troca o tom da mensagem. */

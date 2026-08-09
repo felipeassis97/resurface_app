@@ -18,6 +18,7 @@ import javax.inject.Inject
 
 /** Rascunho do perfil no onboarding + validação (write-through nos repos). */
 data class OnboardingProfile(
+    val name: String = "",
     val tone: Tone = Tone.GENTIL,
     val hobbies: Set<String> = emptySet(),
     val hobbyFree: String? = null,
@@ -26,8 +27,11 @@ data class OnboardingProfile(
     /** Ao menos um hobby marcado ou o campo livre preenchido (obrigatório pra concluir). */
     val hasHobby: Boolean get() = hobbies.isNotEmpty() || !hobbyFree.isNullOrBlank()
 
-    /** Perfil completo pra concluir: tom sempre tem valor, limite sempre na faixa, precisa de hobby. */
-    val isValid: Boolean get() = hasHobby
+    /** Nome informado (obrigatório pra concluir). */
+    val hasName: Boolean get() = name.isNotBlank()
+
+    /** Perfil completo pra concluir: nome + hobby (tom tem default, limite sempre na faixa). */
+    val isValid: Boolean get() = hasName && hasHobby
 }
 
 /**
@@ -47,6 +51,7 @@ class OnboardingViewModel @Inject constructor(
     val profileState: StateFlow<OnboardingProfile> =
         combine(profile.profile, config.limitMinutes) { prof, limit ->
             OnboardingProfile(
+                name = prof.name,
                 tone = prof.tone,
                 hobbies = prof.hobbies,
                 hobbyFree = prof.hobbyFree,
@@ -56,6 +61,9 @@ class OnboardingViewModel @Inject constructor(
 
     /** Registra o consentimento (o pager avança localmente; o gate só recomputa no relaunch). */
     fun recordConsent() = viewModelScope.launch { onboarding.recordConsent() }
+
+    /** Grava o nome. */
+    fun setName(name: String) = viewModelScope.launch { profile.setName(name) }
 
     /** Grava o tom. */
     fun setTone(tone: Tone) = viewModelScope.launch { profile.setTone(tone) }

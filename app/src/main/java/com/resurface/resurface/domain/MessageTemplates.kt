@@ -2,48 +2,48 @@ package com.resurface.resurface.domain
 
 import com.resurface.resurface.domain.model.Tone
 
-/** Um modelo de mensagem à mão, com slots `{min}` `{app}` `{hobby}`. */
-data class MessageTemplate(val title: String, val body: String, val usesHobby: Boolean = false)
+/** Um modelo de mensagem à mão, com slots `{min}` `{app}` `{hobby}` `{name}`. */
+data class MessageTemplate(
+    val title: String,
+    val body: String,
+    val usesHobby: Boolean = false,
+    val usesName: Boolean = false,
+)
 
 /**
- * Pools de mensagens à mão por tom (D8) — a fundação e o fallback. Curadas pra respeitar P2 (só
- * afirma o que mede, nada de estado mental) e P5 (sem cobrança/culpa; o hobby é convite, nunca
- * "você devia"). As piadas do tom bem-humorado miram o algoritmo/feed, não a pessoa.
+ * Pools de mensagens à mão por tom (D8), em inglês, a fundação e o fallback. Curadas pra respeitar
+ * P2 (só afirma o que mede, nada de estado mental) e P5 (sem cobrança/culpa; o hobby é convite). As
+ * piadas do tom bem-humorado miram o algoritmo/feed, nunca a pessoa. Sem travessões (soa humano).
  */
 object MessageTemplates {
 
     val pools: Map<Tone, List<MessageTemplate>> = mapOf(
         Tone.DIRETO to listOf(
-            MessageTemplate("{min} minutos no {app}.", "Ainda é isso que você quer estar fazendo?"),
-            MessageTemplate("{min} min por aqui.", "Só pra você saber."),
-            MessageTemplate("{app}: {min} minutos.", "Segue se quiser."),
-            MessageTemplate("Você está há {min} min no {app}.", "Decisão sua."),
-            MessageTemplate("Passaram {min} minutos.", "Nenhuma cobrança — só o número."),
-            MessageTemplate("{min} min de vídeo curto.", "Você decide o próximo."),
-            MessageTemplate("{min} minutos aqui.", "Fim natural não existe nessa tela. Este é um."),
-            MessageTemplate("{min} min no {app}.", "{hobby} também está aí, se der vontade.", usesHobby = true),
+            MessageTemplate("{min} minutes on {app}.", "Still what you want to be doing?"),
+            MessageTemplate("{min} min here.", "Just so you know."),
+            MessageTemplate("{app}: {min} minutes.", "Carry on if you like."),
+            MessageTemplate("{min} minutes in.", "No pressure, just the number."),
+            MessageTemplate("{min} min of short video.", "You pick the next one."),
+            MessageTemplate("{name}, {min} min on {app}.", "Your call.", usesName = true),
+            MessageTemplate("{min} min on {app}.", "{hobby} is there too, if you feel like it.", usesHobby = true),
         ),
         Tone.GENTIL to listOf(
-            MessageTemplate("Ei — {min} min por aqui.", "Tudo bem por aí?"),
-            MessageTemplate("Já faz {min} minutos.", "Como você está agora?"),
-            MessageTemplate("{min} min no {app}.", "Sem pressa — só um oi."),
-            MessageTemplate("Um tempinho passou ({min} min).", "Que tal um respiro?"),
-            MessageTemplate("{min} minutos, lembrando com carinho.", "Você no comando."),
-            MessageTemplate("Oi — {min} min no {app}.", "Só passando pra dizer olá."),
-            MessageTemplate("{min} minutos.", "Está tudo certo? Fique à vontade."),
-            MessageTemplate("{min} min por aqui.", "{hobby} espera por você quando quiser.", usesHobby = true),
-            MessageTemplate("{min} min já.", "Um pouco de {hobby} também faz bem.", usesHobby = true),
+            MessageTemplate("It has been {min} minutes.", "How are you right now?"),
+            MessageTemplate("{min} min on {app}.", "No rush, just saying hi."),
+            MessageTemplate("A little while passed ({min} min).", "How about a breath?"),
+            MessageTemplate("{min} minutes, gently noted.", "You are in charge."),
+            MessageTemplate("Hey {name}, {min} min here.", "All good?", usesName = true),
+            MessageTemplate("{min} min here.", "{hobby} will be there whenever you want.", usesHobby = true),
+            MessageTemplate("Hey {name}.", "{min} min in. A bit of {hobby} sounds nice too.", usesHobby = true, usesName = true),
         ),
         Tone.BEM_HUMORADO to listOf(
-            MessageTemplate("Placar: algoritmo {min}, você 0.", "Empate técnico?"),
-            MessageTemplate("{min} min no {app}.", "O feed não vai acabar. Ele nunca acaba. 🌀"),
-            MessageTemplate("Notícia: já são {min} minutos.", "O tempo fugiu de fininho."),
-            MessageTemplate("{min} min de scroll.", "Seu polegar merece férias."),
-            MessageTemplate("{app}, {min} minutos.", "A gente se vê do outro lado?"),
-            MessageTemplate("{min} minutos depois…", "…e o vídeo ainda está bom, né?"),
-            MessageTemplate("Alerta de buraco de coelho: {min} min.", "Tudo bem, acontece."),
-            MessageTemplate("{min} min aqui.", "{hobby} ligou, está com saudade.", usesHobby = true),
-            MessageTemplate("{min} min de {app}.", "{hobby} também é rolê, só lembrando 😄", usesHobby = true),
+            MessageTemplate("Score: algorithm {min}, you 0.", "Rematch?"),
+            MessageTemplate("{min} min on {app}.", "The feed never ends. It literally never ends."),
+            MessageTemplate("News flash: {min} minutes.", "Time snuck out the back."),
+            MessageTemplate("{min} min of scrolling.", "Your thumb deserves a break."),
+            MessageTemplate("Rabbit hole alert: {min} min.", "It happens."),
+            MessageTemplate("{name}, {min} minutes.", "See you on the other side?", usesName = true),
+            MessageTemplate("{min} min here.", "{hobby} called, it misses you.", usesHobby = true),
         ),
     )
 }
