@@ -46,6 +46,7 @@ private fun hhmm(minute: Int): String = "%02d:%02d".format(minute / 60, minute %
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val wristbandState by viewModel.wristbandState.collectAsStateWithLifecycle()
     SettingsContent(
         state = state,
         onSetLimit = viewModel::onSetLimit,
@@ -54,6 +55,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         onToggleHobby = viewModel::onToggleHobby,
         onToggleDay = viewModel::onToggleDay,
         onSetWindow = viewModel::onSetWindow,
+        wristband = {
+            WristbandSettingsSection(
+                state = wristbandState,
+                intensity = state.intensity,
+                onPair = viewModel::onPairWristband,
+                onSetIntensity = viewModel::onSetIntensity,
+            )
+        },
         // Único ponto de contato do dev-tools na produção: some em release (BuildConfig.DEBUG).
         devTools = { if (BuildConfig.DEBUG) DevToolsSection() },
     )
@@ -71,6 +80,7 @@ private fun SettingsContent(
     onToggleDay: (DayOfWeek) -> Unit,
     onSetWindow: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
+    wristband: @Composable () -> Unit = {},
     devTools: @Composable () -> Unit = {},
 ) {
     var slider by remember(state.limitMinutes) { mutableFloatStateOf(state.limitMinutes.toFloat()) }
@@ -144,6 +154,9 @@ private fun SettingsContent(
         } else {
             Button(onClick = onPauseToday, modifier = Modifier.fillMaxWidth()) { Text("Pausar por hoje") }
         }
+
+        // Pulseira (slot: pareamento + intensidade).
+        wristband()
 
         // Dev-tools (slot vazio em produção/preview; preenchido só em debug via SettingsScreen).
         devTools()

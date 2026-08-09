@@ -54,7 +54,26 @@ class SettingsViewModelTest {
         return com.resurface.resurface.data.profile.ProfileRepository(ds, UnconfinedTestDispatcher(scope.testScheduler))
     }
 
-    private fun vm(scope: TestScope) = SettingsViewModel(config(scope), profile(scope))
+    // Link BLE fake: estado fixo Idle, métodos no-op (os testes não exercitam pareamento).
+    private class FakeLink : com.resurface.resurface.ble.WristbandLink {
+        override val state = kotlinx.coroutines.flow.MutableStateFlow<com.resurface.resurface.ble.WristbandConnectionState>(
+            com.resurface.resurface.ble.WristbandConnectionState.Idle,
+        )
+        override val scanResults = kotlinx.coroutines.flow.MutableStateFlow<List<com.resurface.resurface.ble.DiscoveredWristband>>(emptyList())
+        override fun startScan() {}
+        override fun stopScan() {}
+        override fun connect(address: String) {}
+        override fun reconnectRemembered() {}
+    }
+
+    private fun wristbandPrefs(scope: TestScope): com.resurface.resurface.data.wristband.WristbandPreferences {
+        val ds: DataStore<Preferences> = PreferenceDataStoreFactory.create(scope = scope.backgroundScope) {
+            tmp.newFile("wb-${System.nanoTime()}.preferences_pb")
+        }
+        return com.resurface.resurface.data.wristband.WristbandPreferences(ds, UnconfinedTestDispatcher(scope.testScheduler))
+    }
+
+    private fun vm(scope: TestScope) = SettingsViewModel(config(scope), profile(scope), FakeLink(), wristbandPrefs(scope))
 
     /** O UiState expõe o limite padrão (20) sem nada gravado. */
     @Test

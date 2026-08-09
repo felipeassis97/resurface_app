@@ -17,6 +17,12 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Camada 3 do D23 (sobreviver ao One UI). -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Pulseira BLE: scan pra parear (neverForLocation) + connect pra reconectar/escrever. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
     <!-- Os dois alvos do escopo v1 (D19). -->
     <queries>

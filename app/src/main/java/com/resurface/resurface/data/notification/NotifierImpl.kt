@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import com.resurface.resurface.ble.AlertHaptics
 import com.resurface.resurface.service.OutcomeReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -14,9 +15,11 @@ import javax.inject.Inject
 /**
  * Impl real. Canal HIGH faz o heads-up sobre tela cheia (validado GAPS G5); canal LOW é a
  * notificação fixa do FGS. Botões via PendingIntent imutável, requestCode único por ação.
+ * Todo aviso postado também pulsa a pulseira via [haptics] (fire-and-forget, D-2).
  */
 class NotifierImpl @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val haptics: AlertHaptics,
 ) : Notifier {
 
     private val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -56,6 +59,8 @@ class NotifierImpl @Inject constructor(
             .addAction(0, "agora não", action(OutcomeReceiver.ACTION_AGORA_NAO, alertId))
             .build()
         manager.notify(NOTIF_ALERT, notification)
+        // Canal sem tela: pulsa a pulseira junto (no-op se não conectada). Todo aviso, incl. teste.
+        haptics.pulse()
     }
 
     /** Fecha o aviso. */
