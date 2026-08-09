@@ -1,0 +1,6 @@
+# Template — copie a linha da chave pro seu `local.properties` (gitignored) e preencha.
+# O `local.properties` real NÃO vai pro git; este `.example` é só a referência.
+#
+# Chave da API do Gemini (Google AI Studio: https://aistudio.google.com/apikey).
+# É o proxy cloud do Gemini Nano pro F2 (mensagem no tom). Sem chave → mensagens à mão.
+GEMINI_API_KEY=cole_sua_chave_aqui
