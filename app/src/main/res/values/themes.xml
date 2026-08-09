@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Resurface" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Resurface" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Only the launch window shows before Compose draws. Point its background at a
+             DayNight color resource so dark mode does not flash white.
+             (@color/window_background resolves to values-night in dark config.) -->
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>
