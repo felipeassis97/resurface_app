@@ -5,11 +5,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.resurface.resurface.ui.screens.home.HomeScreen
-import com.resurface.resurface.ui.screens.insights.InsightsScreen
+import com.resurface.resurface.ui.screens.dashboard.DashboardScreen
 import com.resurface.resurface.ui.screens.settings.SettingsScreen
 
-/** Registra as rotas type-safe dos três destinos top-level (Home/Insights/Ajustes). */
+/** Registra as rotas: dashboard (inicial) e ajustes (alcançada pelo ícone da top bar). */
 @Composable
 fun ResurfaceNavHost(
     navController: NavHostController,
@@ -17,11 +16,12 @@ fun ResurfaceNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Destination.start.route,
+        startDestination = DashboardRoute,
         modifier = modifier,
     ) {
-        composable<HomeRoute> { HomeScreen() }
-        composable<InsightsRoute> { InsightsScreen() }
+        composable<DashboardRoute> {
+            DashboardScreen(onOpenSettings = { navController.navigate(SettingsRoute) })
+        }
         composable<SettingsRoute> { SettingsScreen() }
     }
 }

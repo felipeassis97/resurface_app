@@ -1,4 +1,4 @@
-package com.resurface.resurface.ui.screens.home
+package com.resurface.resurface.ui.screens.dashboard
 
 import com.resurface.resurface.domain.model.EpisodePhase
 import com.resurface.resurface.domain.model.EpisodeState
@@ -20,13 +20,13 @@ private fun dentro(bankedMin: Double, runningSince: Long) = EpisodeState(
     appsInEpisode = setOf(IG),
 )
 
-class HomeViewModelTest {
+class DashboardViewModelTest {
 
     /** DENTRO com 12m30s → 12 minutos, ativo, com o app. */
     @Test
     fun `dentro mostra minutos e app`() {
         val now = 1_000_000L
-        val s = toHomeUiState(dentro(12.5, runningSince = now), now, paused = false)
+        val s = toLiveState(dentro(12.5, runningSince = now), now, paused = false)
         assertTrue(s.active)
         assertEquals(12, s.minutes)
         assertEquals("Instagram", s.appLabel)
@@ -36,16 +36,16 @@ class HomeViewModelTest {
     @Test
     fun `minutos sobem com o tempo`() {
         val start = 1_000_000L
-        val s0 = toHomeUiState(dentro(12.0, runningSince = start), start, paused = false)
-        val s1 = toHomeUiState(dentro(12.0, runningSince = start), start + 60_000, paused = false)
+        val s0 = toLiveState(dentro(12.0, runningSince = start), start, paused = false)
+        val s1 = toLiveState(dentro(12.0, runningSince = start), start + 60_000, paused = false)
         assertEquals(12, s0.minutes)
-        assertEquals(13, s1.minutes)   // +1 min só pelo relógio andar
+        assertEquals(13, s1.minutes)
     }
 
     /** FORA → repouso: inativo, sem minutos, sem app. */
     @Test
     fun `fora mostra repouso`() {
-        val s = toHomeUiState(EpisodeState.INITIAL, 1_000_000L, paused = false)
+        val s = toLiveState(EpisodeState.INITIAL, 1_000_000L, paused = false)
         assertFalse(s.active)
         assertEquals(0, s.minutes)
         assertEquals("", s.appLabel)
@@ -54,7 +54,7 @@ class HomeViewModelTest {
     /** Pausar por hoje é sinalizado. */
     @Test
     fun `pausa é sinalizada`() {
-        val s = toHomeUiState(EpisodeState.INITIAL, 1_000_000L, paused = true)
+        val s = toLiveState(EpisodeState.INITIAL, 1_000_000L, paused = true)
         assertTrue(s.pausedToday)
     }
 }

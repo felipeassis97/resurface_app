@@ -101,15 +101,15 @@ class InsightsAggregator {
         )
     }
 
-    /** Rótulo curto do dia da semana (1=segunda … 7=domingo). */
+    /** Short weekday label (1=Monday … 7=Sunday). */
     private fun dayLabel(isoDow: Int): String =
-        listOf("seg", "ter", "qua", "qui", "sex", "sáb", "dom")[isoDow - 1]
+        listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")[isoDow - 1]
 
-    /** Rótulo humano da resposta guardada. */
+    /** Human label for the stored alert response. */
     private fun responseLabel(stored: String?): String = when (stored) {
-        RESP_ERA_HORA -> "era hora"
-        RESP_AGORA_NAO -> "agora não"
-        else -> "sem resposta"
+        RESP_ERA_HORA -> "right time"
+        RESP_AGORA_NAO -> "not now"
+        else -> "no response"
     }
 
     private companion object {
