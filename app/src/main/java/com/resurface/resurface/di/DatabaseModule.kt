@@ -26,6 +26,7 @@ object DatabaseModule {
                 ResurfaceDatabase.MIGRATION_1_2,
                 ResurfaceDatabase.MIGRATION_2_3,
                 ResurfaceDatabase.MIGRATION_3_4,
+                ResurfaceDatabase.MIGRATION_4_5,
             )
             .build()
 

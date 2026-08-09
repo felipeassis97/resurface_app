@@ -47,17 +47,26 @@ class SettingsViewModelTest {
         )
     }
 
+    private fun profile(scope: TestScope): com.resurface.resurface.data.profile.ProfileRepository {
+        val ds: DataStore<Preferences> = PreferenceDataStoreFactory.create(scope = scope.backgroundScope) {
+            tmp.newFile("prof-${System.nanoTime()}.preferences_pb")
+        }
+        return com.resurface.resurface.data.profile.ProfileRepository(ds, UnconfinedTestDispatcher(scope.testScheduler))
+    }
+
+    private fun vm(scope: TestScope) = SettingsViewModel(config(scope), profile(scope))
+
     /** O UiState expõe o limite padrão (20) sem nada gravado. */
     @Test
     fun `expoe o limite padrao`() = runTest {
-        val vm = SettingsViewModel(config(this))
+        val vm = vm(this)
         assertEquals(20, vm.uiState.first().limitMinutes)
     }
 
     /** onSetLimit dentro da faixa grava e reflete. */
     @Test
     fun `set limit grava`() = runTest {
-        val vm = SettingsViewModel(config(this))
+        val vm = vm(this)
         vm.onSetLimit(30)
         assertEquals(30, vm.uiState.first { it.limitMinutes == 30 }.limitMinutes)
     }
@@ -65,7 +74,7 @@ class SettingsViewModelTest {
     /** onSetLimit fora da faixa não muda o valor. */
     @Test
     fun `set limit fora da faixa nao muda`() = runTest {
-        val vm = SettingsViewModel(config(this))
+        val vm = vm(this)
         vm.onSetLimit(30)
         vm.uiState.first { it.limitMinutes == 30 }
         vm.onSetLimit(5)
@@ -75,7 +84,7 @@ class SettingsViewModelTest {
     /** onPauseToday marca pausado. */
     @Test
     fun `pausar por hoje marca pausado`() = runTest {
-        val vm = SettingsViewModel(config(this))
+        val vm = vm(this)
         vm.onPauseToday()
         assertTrue(vm.uiState.first { it.pausedToday }.pausedToday)
     }

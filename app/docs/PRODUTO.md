@@ -394,6 +394,30 @@ suportar, entra uma mensagem escrita à mão do mesmo tom.
 > as mensagens à mão são a fundação, não o plano B. A geração fica pra quando/se rodar
 > num aparelho compatível, sem bloquear nada.
 
+> 🔒 **Revisão de 2026-08-09 (F2): geração via Gemini cloud (Flash) como PROXY do Nano.**
+> O app virou a ferramenta pessoal do mestrado, e a pesquisa é sobre *"nudge personalizado muda a
+> decisão"* — não sobre privacidade local. Como o A53 não roda o Nano, usamos o **Gemini cloud
+> (Flash-Lite)** como **proxy fiel** do que o Nano entregaria: mesma família, modelo pequeno, saída
+> curta e restrita (não um frontier — senão a simulação superestima o Nano).
+>
+> ```
+> modelo-alvo (produto de mercado)  →  Gemini Nano on-device  (restaura o P4)
+> proxy de simulação (mestrado)      →  Gemini cloud Flash-Lite (mesma família)
+> base e fallback (sempre)           →  mensagens à mão (D8) — offline, garantidas P2/P5
+> ```
+>
+> **O que muda e o que NÃO muda:**
+> - **Arquitetura Nano-ready:** a geração fica atrás de uma interface `MessageGenerator`. Trocar
+>   cloud↔Nano é um binding. O cloud é stand-in, não desvio.
+> - **D9 intacto:** a IA escreve *como*, nunca *se* avisa — a decisão continua na AlertPolicy, auditável.
+> - **Guard P2/P5:** a saída gerada passa por um filtro que descarta cobrança/estado mental → cai no
+>   template. O à mão é o piso seguro.
+> - **Pré-geração + cache:** a rede acontece antes (no tick), nunca no instante do disparo. Sem
+>   rede/chave → mensagens à mão. O app nunca depende do cloud pra avisar.
+> - **⚠️ P4 relaxado, conscientemente:** o prompt (`tom, minutos, app, hora, hobby` — nunca conteúdo
+>   de tela) sai pro cloud. É decisão documentada pro contexto pessoal; o Nano (alvo) restaura o P4.
+>   Num produto de mercado (caminho C), o modelo correto é o Nano, e o P4 volta inteiro.
+
 ---
 
 ### F5 — Histórico e observações

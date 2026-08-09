@@ -20,4 +20,8 @@ data class AlertOutcomeEntity(
     val appLabel: String,
     val response: String? = null,
     val respondedAt: Long? = null,
+    /** Tom da mensagem mostrada (H4). */
+    val tone: String? = null,
+    /** Fonte do texto: "generated" (Gemini) ou "template" (à mão). */
+    val source: String? = null,
 )

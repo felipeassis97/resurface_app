@@ -43,12 +43,12 @@ class NotifierImpl @Inject constructor(
             .build()
     }
 
-    /** Posta o aviso no tom à mão (D8), com os dois botões ligados ao [alertId]. */
-    override fun postAlert(appLabel: String, minutes: Int, alertId: Long) {
+    /** Posta o aviso com o texto composto (perfil+momento) + os dois botões ligados ao [alertId]. */
+    override fun postAlert(title: String, body: String, alertId: Long) {
         ensureChannels()
         val notification = NotificationCompat.Builder(context, CH_ALERT)
-            .setContentTitle("Você está no $appLabel há $minutes minutos.")
-            .setContentText("Ainda é isso que você quer estar fazendo?")
+            .setContentTitle(title)
+            .setContentText(body)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)

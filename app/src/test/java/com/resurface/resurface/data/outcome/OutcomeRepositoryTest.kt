@@ -43,7 +43,7 @@ class OutcomeRepositoryTest {
     fun `registrar aviso cria linha sem resposta`() = runTest {
         val dao = FakeOutcomeDao()
         val repo = OutcomeRepository(dao, UnconfinedTestDispatcher(testScheduler))
-        val id = repo.recordFired(firedAt = 1_000, appLabel = "Instagram")
+        val id = repo.recordFired(firedAt = 1_000, appLabel = "Instagram", tone = "GENTIL", source = "template")
         val row = dao.items.first().first { it.id == id }
         assertEquals("Instagram", row.appLabel)
         assertNull(row.response)

@@ -17,9 +17,9 @@ class OutcomeRepository @Inject constructor(
     /** Todos os outcomes, do mais recente pro mais antigo. */
     val outcomes: Flow<List<AlertOutcomeEntity>> = dao.observeAll()
 
-    /** Registra que um aviso disparou; devolve o id pra ligar aos botões. */
-    suspend fun recordFired(firedAt: Long, appLabel: String): Long = withContext(io) {
-        dao.insert(AlertOutcomeEntity(firedAt = firedAt, appLabel = appLabel))
+    /** Registra que um aviso disparou (com tom + fonte, H4); devolve o id pra ligar aos botões. */
+    suspend fun recordFired(firedAt: Long, appLabel: String, tone: String? = null, source: String? = null): Long = withContext(io) {
+        dao.insert(AlertOutcomeEntity(firedAt = firedAt, appLabel = appLabel, tone = tone, source = source))
     }
 
     /** Grava a resposta do usuário a um aviso. */

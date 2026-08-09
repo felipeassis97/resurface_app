@@ -11,8 +11,8 @@ interface Notifier {
     /** Notificação fixa de baixa importância pro FGS (contador vivo, D21). */
     fun ongoing(text: String): Notification
 
-    /** Posta o aviso heads-up (canal HIGH) com os dois botões, ligado ao [alertId] (F7/G5). */
-    fun postAlert(appLabel: String, minutes: Int, alertId: Long)
+    /** Posta o aviso heads-up (canal HIGH) com o texto composto + os dois botões, ligado ao [alertId]. */
+    fun postAlert(title: String, body: String, alertId: Long)
 
     /** Fecha o aviso (após resposta). */
     fun cancelAlert()

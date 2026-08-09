@@ -9,10 +9,10 @@ import com.resurface.resurface.data.behavior.BehaviorEventEntity
 import com.resurface.resurface.data.outcome.AlertOutcomeDao
 import com.resurface.resurface.data.outcome.AlertOutcomeEntity
 
-/** Banco Room do app. v2=outcomes; v3=episódio único; v4=comportamento (acessibilidade). */
+/** Banco Room. v2=outcomes; v3=episódio único; v4=comportamento; v5=tom+fonte no outcome. */
 @Database(
     entities = [EpisodeEntity::class, AlertOutcomeEntity::class, BehaviorEventEntity::class],
-    version = 4,
+    version = 5,
 )
 abstract class ResurfaceDatabase : RoomDatabase() {
 
@@ -66,6 +66,14 @@ abstract class ResurfaceDatabase : RoomDatabase() {
                         "`surface` TEXT NOT NULL, " +
                         "`hesitated` INTEGER NOT NULL)"
                 )
+            }
+        }
+
+        /** v4→v5: adiciona tom + fonte no outcome (H4, additiva). */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `alert_outcome` ADD COLUMN `tone` TEXT")
+                db.execSQL("ALTER TABLE `alert_outcome` ADD COLUMN `source` TEXT")
             }
         }
     }

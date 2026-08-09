@@ -2,10 +2,12 @@ package com.resurface.resurface.di
 
 import com.resurface.resurface.data.alarm.AlarmScheduler
 import com.resurface.resurface.data.alarm.AlarmSchedulerImpl
+import com.resurface.resurface.data.generation.CloudMessageGenerator
 import com.resurface.resurface.data.notification.Notifier
 import com.resurface.resurface.data.notification.NotifierImpl
 import com.resurface.resurface.data.usage.UsageStatsReader
 import com.resurface.resurface.data.usage.UsageStatsReaderImpl
+import com.resurface.resurface.domain.MessageGenerator
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -30,4 +32,9 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindNotifier(impl: NotifierImpl): Notifier
+
+    /** Liga o gerador de mensagem ao impl cloud (proxy do Nano, D-1). */
+    @Binds
+    @Singleton
+    abstract fun bindMessageGenerator(impl: CloudMessageGenerator): MessageGenerator
 }
