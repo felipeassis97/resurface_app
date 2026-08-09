@@ -19,8 +19,10 @@ class AlertPolicy {
         config: Config,
         todayAlertCount: Int,
         pausedToday: Boolean,
+        isActiveNow: Boolean = true,
     ): AlertDecision {
         if (pausedToday) return AlertDecision.Hold
+        if (!isActiveNow) return AlertDecision.Hold   // fora da janela ativa (allow-list)
         if (todayAlertCount >= MAX_ALERTS_PER_DAY) return AlertDecision.Hold
         val thresholdMinutes = config.limitMinutes shl alertsFiredThisEpisode   // × 2^n
         val thresholdMs = thresholdMinutes * 60_000L

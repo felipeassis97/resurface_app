@@ -26,6 +26,20 @@ class AlertPolicyTest {
         assertEquals(AlertDecision.Hold, d)
     }
 
+    /** Fora da janela ativa segura, mesmo cruzando o limite. */
+    @Test
+    fun `fora da janela segura`() {
+        val d = policy.decide(min(20.0), 0, config, todayAlertCount = 0, pausedToday = false, isActiveNow = false)
+        assertEquals(AlertDecision.Hold, d)
+    }
+
+    /** Dentro da janela e sem pausa dispara. */
+    @Test
+    fun `dentro da janela dispara`() {
+        val d = policy.decide(min(20.0), 0, config, todayAlertCount = 0, pausedToday = false, isActiveNow = true)
+        assertEquals(AlertDecision.Fire(20), d)
+    }
+
     /** O segundo aviso do episódio sai no dobro do limite (D18). */
     @Test
     fun `segundo aviso no dobro`() {

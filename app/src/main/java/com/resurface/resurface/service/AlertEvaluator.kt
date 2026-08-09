@@ -16,6 +16,7 @@ import com.resurface.resurface.domain.AppLabels
 import com.resurface.resurface.domain.EpisodeEngine
 import com.resurface.resurface.domain.MessageGenerator
 import com.resurface.resurface.domain.MessageGuard
+import com.resurface.resurface.domain.ScheduleGate
 import com.resurface.resurface.domain.TemplateComposer
 import com.resurface.resurface.domain.model.AlertDecision
 import com.resurface.resurface.domain.model.EpisodePhase
@@ -60,6 +61,8 @@ class AlertEvaluator @Inject constructor(
     private val planner = AlarmPlanner()
     private val templates = TemplateComposer()
     private val guard = MessageGuard()
+    private val gate = ScheduleGate()
+    private val zone = ZoneId.systemDefault()
     private val genScope = CoroutineScope(io + SupervisorJob())
 
     /** Tick de manutenção: reconstrói o estado, arquiva fechados, atualiza o holder, reagenda. */
@@ -79,7 +82,8 @@ class AlertEvaluator @Inject constructor(
             val paused = configRepo.pausedToday.first()
             val alertsFired = alertsFiredInEpisode(state, now)
             val today = alertsToday(now)
-            val decision = policy.decide(state.accumulatedMsAt(now), alertsFired, cfg, today, paused)
+            val activeNow = gate.isActive(cfg.schedule, now, zone)
+            val decision = policy.decide(state.accumulatedMsAt(now), alertsFired, cfg, today, paused, activeNow)
             if (decision is AlertDecision.Fire) {
                 postComposed(state, decision.limitMinutes, alertsFired, now)
                 firedNow = true
@@ -118,7 +122,9 @@ class AlertEvaluator @Inject constructor(
         val paused = configRepo.pausedToday.first()
         val fired = alertsFiredInEpisode(state, now) + extraFired
         val today = alertsToday(now) + extraFired
-        val delay = planner.nextFireDelayMs(state, cfg, fired, paused, today, now)
+        val activeNow = gate.isActive(cfg.schedule, now, zone)
+        val openingDelay = gate.nextOpening(cfg.schedule, now, zone)?.let { it - now }
+        val delay = planner.nextFireDelayMs(state, cfg, fired, paused, today, now, activeNow, openingDelay)
         if (delay == null) {
             scheduler.cancel()
         } else {

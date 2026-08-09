@@ -14,6 +14,8 @@ data class Config(
     ),
     /** Janela de retorno: sair menos que isto retoma; mais que isto fecha o episódio (D3). */
     val returnWindowMs: Long = 5 * 60 * 1000L,
+    /** Janela ativa (allow-list): quando o usuário aceita avisos. Vazia = sempre ativo. */
+    val schedule: Schedule = Schedule(),
 ) {
     /** Verdadeiro se [pkg] é um app-alvo. */
     fun isTarget(pkg: String): Boolean = pkg in targetPackages

@@ -25,12 +25,22 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.resurface.resurface.BuildConfig
 import com.resurface.resurface.dev.DevToolsSection
+import com.resurface.resurface.domain.model.Schedule
 import com.resurface.resurface.domain.model.Tone
 import com.resurface.resurface.ui.theme.ResurfaceTheme
 import com.resurface.resurface.ui.theme.Spacing
+import java.time.DayOfWeek
 
 private val HOBBIES = listOf("Ler", "Música", "Exercício", "Cozinhar", "Jogos", "Estudar", "Amigos", "Séries")
 private val TONES = listOf(Tone.DIRETO to "Direto", Tone.GENTIL to "Gentil", Tone.BEM_HUMORADO to "Bem-humorado")
+private val DAYS = listOf(
+    DayOfWeek.MONDAY to "Seg", DayOfWeek.TUESDAY to "Ter", DayOfWeek.WEDNESDAY to "Qua",
+    DayOfWeek.THURSDAY to "Qui", DayOfWeek.FRIDAY to "Sex", DayOfWeek.SATURDAY to "Sáb",
+    DayOfWeek.SUNDAY to "Dom",
+)
+
+/** Formata minutos-do-dia (0–1439) como "HH:MM". */
+private fun hhmm(minute: Int): String = "%02d:%02d".format(minute / 60, minute % 60)
 
 /** Tela de ajustes: limite, pausar por hoje, tom e hobbies (F6 + F2). */
 @Composable
@@ -42,6 +52,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         onPauseToday = viewModel::onPauseToday,
         onSetTone = viewModel::onSetTone,
         onToggleHobby = viewModel::onToggleHobby,
+        onToggleDay = viewModel::onToggleDay,
+        onSetWindow = viewModel::onSetWindow,
         // Único ponto de contato do dev-tools na produção: some em release (BuildConfig.DEBUG).
         devTools = { if (BuildConfig.DEBUG) DevToolsSection() },
     )
@@ -56,6 +68,8 @@ private fun SettingsContent(
     onPauseToday: () -> Unit,
     onSetTone: (Tone) -> Unit,
     onToggleHobby: (String) -> Unit,
+    onToggleDay: (DayOfWeek) -> Unit,
+    onSetWindow: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
     devTools: @Composable () -> Unit = {},
 ) {
@@ -97,6 +111,33 @@ private fun SettingsContent(
             }
         }
 
+        // Janela ativa (allow-list): quando quero ser avisado
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.space2)) {
+            Text("Quando quero ser avisado", style = MaterialTheme.typography.titleMedium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.space2)) {
+                DAYS.forEach { (day, label) ->
+                    FilterChip(selected = day in state.schedule.days, onClick = { onToggleDay(day) }, label = { Text(label) })
+                }
+            }
+            if (state.schedule.days.isEmpty()) {
+                Text("Sem dia marcado — avisa sempre", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodyMedium)
+            } else {
+                var start by remember(state.schedule.startMinute) { mutableFloatStateOf(state.schedule.startMinute.toFloat()) }
+                var end by remember(state.schedule.endMinute) { mutableFloatStateOf(state.schedule.endMinute.toFloat()) }
+                Text("Das ${hhmm(start.toInt())} às ${hhmm(end.toInt())}", style = MaterialTheme.typography.bodyMedium)
+                Slider(
+                    value = start, onValueChange = { start = it },
+                    onValueChangeFinished = { onSetWindow(start.toInt(), end.toInt()) },
+                    valueRange = 0f..1425f, steps = 94, modifier = Modifier.fillMaxWidth(),
+                )
+                Slider(
+                    value = end, onValueChange = { end = it },
+                    onValueChangeFinished = { onSetWindow(start.toInt(), end.toInt()) },
+                    valueRange = 0f..1425f, steps = 94, modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
         // Pausar
         if (state.pausedToday) {
             Text("Pausado por hoje — sem avisos até amanhã", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodyMedium)
@@ -116,6 +157,7 @@ private fun SettingsPreview() {
         SettingsContent(
             SettingsUiState(limitMinutes = 20, tone = Tone.GENTIL, hobbies = setOf("Ler")),
             onSetLimit = {}, onPauseToday = {}, onSetTone = {}, onToggleHobby = {},
+            onToggleDay = {}, onSetWindow = { _, _ -> },
         )
     }
 }

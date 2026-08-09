@@ -41,6 +41,26 @@ class AlarmPlannerTest {
         assertEquals(0L, delay)
     }
 
+    /** Fora da janela ativa, agenda a abertura (nextOpeningDelayMs), ignorando o limite. */
+    @Test
+    fun `fora da janela agenda abertura`() {
+        val now = 1_000_000L
+        val delay = planner.nextFireDelayMs(
+            dentro(30.0, now), config, 0, false, 0, now, isActiveNow = false, nextOpeningDelayMs = min(45.0),
+        )
+        assertEquals(min(45.0), delay)
+    }
+
+    /** Dentro da janela, mantém o cruzamento do limite. */
+    @Test
+    fun `dentro da janela mira o limite`() {
+        val now = 1_000_000L
+        val delay = planner.nextFireDelayMs(
+            dentro(12.0, now), config, 0, false, 0, now, isActiveNow = true, nextOpeningDelayMs = null,
+        )
+        assertEquals(min(8.0), delay)
+    }
+
     /** O segundo aviso mira o dobro (40 min). */
     @Test
     fun `segundo aviso mira o dobro`() {

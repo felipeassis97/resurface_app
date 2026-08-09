@@ -21,10 +21,14 @@ class AlarmPlanner {
         pausedToday: Boolean,
         todayAlertCount: Int,
         now: Long,
+        isActiveNow: Boolean = true,
+        nextOpeningDelayMs: Long? = null,
     ): Long? {
         if (state.phase != EpisodePhase.DENTRO) return null
         if (pausedToday) return null
         if (todayAlertCount >= AlertPolicy.MAX_ALERTS_PER_DAY) return null
+        // Fora da janela: acorda na abertura dela (ou não agenda se não há abertura futura).
+        if (!isActiveNow) return nextOpeningDelayMs
         val thresholdMs = (config.limitMinutes shl alertsFired) * 60_000L
         val remaining = thresholdMs - state.accumulatedMsAt(now)
         return remaining.coerceAtLeast(0L)

@@ -3,6 +3,8 @@ package com.resurface.resurface.data.config
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import com.resurface.resurface.domain.model.Schedule
+import java.time.DayOfWeek
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -85,5 +87,24 @@ class ConfigRepositoryTest {
         assertTrue(r.pausedToday.first())                       // 15h < meia-noite → ativo
         clock.value = at(LocalDateTime.of(2026, 8, 10, 0, 1))   // já passou da meia-noite
         assertFalse(r.pausedToday.first())                      // expirou
+    }
+
+    /** Sem nada gravado, a janela ativa é vazia (sempre ativo). */
+    @Test
+    fun `janela padrao vazia`() = runTest {
+        val r = repo(this, MutableTime(at(LocalDateTime.of(2026, 8, 9, 12, 0))))
+        assertTrue(r.schedule.first().isEmpty)
+    }
+
+    /** Round-trip da janela: grava dias + faixa e lê igual. */
+    @Test
+    fun `grava e le a janela`() = runTest {
+        val r = repo(this, MutableTime(at(LocalDateTime.of(2026, 8, 9, 12, 0))))
+        val s = Schedule(setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY), 18 * 60, 23 * 60)
+        r.setSchedule(s)
+        val read = r.schedule.first()
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY), read.days)
+        assertEquals(18 * 60, read.startMinute)
+        assertEquals(23 * 60, read.endMinute)
     }
 }
