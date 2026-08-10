@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -217,38 +218,48 @@ private fun DayChartCard(week: WeekSummary, bars: List<DayBar>) {
             bars.forEach { bar ->
                 val isMax = bar.minutes == max && bar.minutes > 0
                 val frac = (bar.minutes.toFloat() / max).coerceIn(0.02f, 1f)
+                // Mostra o callout de tempo no pico e sempre no dia corrente.
+                val showCallout = isMax || bar.isToday
+                val calloutBg = if (isMax) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                val calloutFg = if (isMax) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
                 Column(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // slot do callout (altura fixa; só o pico mostra o valor)
-                    Box(Modifier.height(16.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        if (isMax) {
-                            Text(
-                                formatHmShort(bar.minutes),
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 9.sp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                maxLines = 1,
-                                softWrap = false,
+                    // Área das barras: o callout fica COLADO no topo da barra (não num slot fixo no topo).
+                    BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                        // Reserva no topo pro callout caber acima da barra mais alta sem cortar.
+                        val reserve = 18.dp
+                        val barHeight = (maxHeight - reserve) * frac
+                        Column(
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            if (showCallout) {
+                                Text(
+                                    formatHmShort(bar.minutes),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 9.sp),
+                                    color = calloutFg,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier
+                                        .padding(bottom = 2.dp)
+                                        .clip(ResurfaceShapes.full)
+                                        .background(calloutBg)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                                )
+                            }
+                            Box(
                                 modifier = Modifier
-                                    .clip(ResurfaceShapes.full)
-                                    .background(MaterialTheme.colorScheme.primary)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                                    .fillMaxWidth()
+                                    .height(barHeight)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(
+                                        if (isMax) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+                                    ),
                             )
                         }
-                    }
-                    // área das barras (com peso: escala sem estourar)
-                    Box(Modifier.weight(1f).fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.BottomCenter) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(frac)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(
-                                    if (isMax) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-                                ),
-                        )
                     }
                     Text(
                         bar.label,

@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit
 data class AlertRow(val appLabel: String, val response: String, val firedAt: Long)
 
 /** Barra de um dia: rótulo (seg/ter…) e minutos. */
-data class DayBar(val label: String, val minutes: Int)
+data class DayBar(val label: String, val minutes: Int, val isToday: Boolean = false)
 
 /** Resumo da semana corrente + tendência vs a anterior. */
 data class WeekSummary(
@@ -68,7 +68,7 @@ class InsightsAggregator {
             val start = day.atStartOfDay(zone).toInstant().toEpochMilli()
             val end = day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
             val min = episodes.filter { it.startedAt in start until end }.sumOf { it.accumulatedMs } / 60_000L
-            DayBar(label = dayLabel(day.dayOfWeek.value), minutes = min.toInt())
+            DayBar(label = dayLabel(day.dayOfWeek.value), minutes = min.toInt(), isToday = back == 0)
         }
 
         val buckets = MutableList(24) { 0 }
