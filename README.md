@@ -26,9 +26,8 @@
 
 ---
 
-<!-- 📸 Add the screenshots from the presentation to docs/media/ and they will render here -->
 <p align="center">
-  <img src="docs/media/screens-dark.png" width="100%" alt="Resurface screens — dark theme" />
+  <img src="app-screens.png" width="100%" alt="Resurface screens — dark and light themes" />
 </p>
 
 ## Table of contents
@@ -146,9 +145,8 @@ Engineering rules (from [`ENGENHARIA.md`](app/docs/ENGENHARIA.md)) include: plat
 
 A screenless channel: a gentle tap on the wrist nudges without pulling attention back to the phone.
 
-<!-- 📸 Add the hardware photos from the presentation to docs/media/ -->
 <p align="center">
-  <img src="docs/media/hardware-evolution.png" width="100%" alt="Schematic → breadboard → PCB layout → assembled board" />
+  <img src="hardware-evolution.png" width="100%" alt="Schematic → breadboard → PCB layout → assembled board" />
 </p>
 
 - **Hardware evolution** — from an **ESP32-S3 + DRV2605L** haptic driver to a **Seeed XIAO nRF52840** with a **discrete MOSFET driver**: smaller, native BLE, and better suited to the wrist.
